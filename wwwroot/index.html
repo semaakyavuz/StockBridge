@@ -1,0 +1,1017 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockBridge</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f2f5;
+            color: #1a1a2e;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: #1a1a2e;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem 1rem;
+            gap: 4px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+            .logo span {
+                color: #5DCAA5;
+            }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            color: rgba(255,255,255,0.55);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.15s;
+        }
+
+            .nav-item:hover {
+                background: rgba(255,255,255,0.07);
+                color: #fff;
+            }
+
+            .nav-item.active {
+                background: rgba(93,202,165,0.15);
+                color: #5DCAA5;
+            }
+
+            .nav-item.logout {
+                margin-top: auto;
+                color: rgba(255,100,100,0.7);
+            }
+
+                .nav-item.logout:hover {
+                    background: rgba(255,100,100,0.1);
+                    color: #ff6b6b;
+                }
+
+        .nav-icon {
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .user-info {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+        }
+
+        .user-info-name {
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-info-role {
+            color: rgba(255,255,255,0.4);
+            font-size: 11px;
+            margin-top: 2px;
+        }
+
+        .main {
+            margin-left: 220px;
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+            .topbar h1 {
+                font-size: 20px;
+                font-weight: 600;
+            }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 18px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.15s;
+        }
+
+        .btn-primary {
+            background: #1D9E75;
+            color: #fff;
+        }
+
+            .btn-primary:hover {
+                background: #178a60;
+            }
+
+        .btn-secondary {
+            background: #fff;
+            color: #1a1a2e;
+            border: 1px solid #e0e0e0;
+        }
+
+            .btn-secondary:hover {
+                background: #f5f5f5;
+            }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metrics-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 1px solid #e8e8e8;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .metric-val {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+            .metric-val.red {
+                color: #dc2626;
+            }
+
+            .metric-val.green {
+                color: #16a34a;
+            }
+
+            .metric-val.blue {
+                color: #2563eb;
+            }
+
+            .metric-val.purple {
+                color: #7c3aed;
+            }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e8e8e8;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            text-align: left;
+            padding: 10px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            background: #fafafa;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f7f7f7;
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: #fafafa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-ok {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .badge-low {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .badge-synced {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-in {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .badge-out {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .icon-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid #e8e8e8;
+            background: #fff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 15px;
+            transition: all 0.15s;
+        }
+
+            .icon-btn:hover {
+                background: #f5f5f5;
+                border-color: #ccc;
+            }
+
+            .icon-btn.danger:hover {
+                background: #fee2e2;
+                border-color: #fca5a5;
+                color: #b91c1c;
+            }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .modal-overlay.open {
+                display: flex;
+            }
+
+        .modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 2rem;
+            width: 480px;
+            max-width: 95vw;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: #f5f5f5;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            font-size: 18px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .close-btn:hover {
+                background: #eee;
+            }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+            .form-group.full {
+                grid-column: 1 / -1;
+            }
+
+        label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input, textarea, select {
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.15s;
+            font-family: inherit;
+            background: #fff;
+        }
+
+            input:focus, textarea:focus, select:focus {
+                border-color: #1D9E75;
+                box-shadow: 0 0 0 3px rgba(29,158,117,0.1);
+            }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 1.5rem;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #1a1a2e;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            z-index: 999;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+
+            .toast.show {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            .toast.success {
+                background: #065f46;
+            }
+
+            .toast.error {
+                background: #7f1d1d;
+            }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #aaa;
+        }
+
+            .empty-state div {
+                font-size: 40px;
+                margin-bottom: 0.5rem;
+            }
+
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: #1a1a2e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-logo {
+            font-size: 32px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+
+            .loading-logo span {
+                color: #5DCAA5;
+            }
+
+        .loading-sub {
+            color: rgba(255,255,255,0.4);
+            font-size: 14px;
+        }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #5DCAA5;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <div class="loading-logo">Stock<span>Bridge</span></div>
+        <div class="loading-sub">Kimlik doğrulanıyor...</div>
+    </div>
+
+    <div class="sidebar" id="sidebar" style="display:none">
+        <div class="logo">Stock<span>Bridge</span></div>
+        <div class="user-info">
+            <div class="user-info-name" id="user-name">—</div>
+            <div class="user-info-role">Yönetici</div>
+        </div>
+        <div class="nav-item active" onclick="showPage('dashboard')"><span class="nav-icon">⊞</span> Dashboard</div>
+        <div class="nav-item" onclick="showPage('products')"><span class="nav-icon">📦</span> Ürünler</div>
+        <div class="nav-item" onclick="showPage('movements')"><span class="nav-icon">📋</span> Stok Hareketleri</div>
+        <div class="nav-item" onclick="showPage('lowstock')"><span class="nav-icon">⚠️</span> Kritik Stok</div>
+        <div class="nav-item" onclick="showPage('reports')"><span class="nav-icon">📊</span> Raporlar</div>
+        <div class="nav-item logout" onclick="logout()"><span class="nav-icon">🚪</span> Çıkış Yap</div>
+    </div>
+
+    <div class="main" id="main-content" style="display:none">
+
+        <!-- Dashboard -->
+        <div id="page-dashboard">
+            <div class="topbar">
+                <h1>Dashboard</h1>
+                <div style="display:flex;gap:10px">
+                    <button class="btn btn-secondary" onclick="syncAll()">🔄 Tümünü Sync Et</button>
+                    <button class="btn btn-primary" onclick="openModal()">+ Yeni Ürün</button>
+                </div>
+            </div>
+            <div class="metrics">
+                <div class="metric-card"><div class="metric-label">Toplam Ürün</div><div class="metric-val blue" id="metric-total">—</div></div>
+                <div class="metric-card"><div class="metric-label">Kritik Stok</div><div class="metric-val red" id="metric-low">—</div></div>
+                <div class="metric-card"><div class="metric-label">ERP Sync</div><div class="metric-val green" id="metric-sync">—</div></div>
+            </div>
+            <div style="margin-bottom:1rem;display:flex;gap:10px">
+                <input type="text" id="search-input" placeholder="🔍 SKU veya ürün adı ara..." oninput="filterProducts()" style="flex:1;padding:10px 14px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none">
+                <select id="filter-status" onchange="filterProducts()" style="padding:10px 14px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;background:#fff;outline:none">
+                    <option value="all">Tümü</option>
+                    <option value="low">Kritik Stok</option>
+                    <option value="synced">ERP Sync</option>
+                    <option value="pending">Bekliyor</option>
+                </select>
+            </div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">Ürün Listesi</span></div>
+                <table>
+                    <thead><tr><th>SKU</th><th>Ürün Adı</th><th>Fiyat</th><th>Stok</th><th>Durum</th><th>ERP</th><th>İşlem</th></tr></thead>
+                    <tbody id="products-table-body"><tr><td colspan="7"><div class="empty-state"><div>📦</div>Yükleniyor...</div></td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Ürünler -->
+        <div id="page-products" style="display:none">
+            <div class="topbar"><h1>Ürünler</h1><button class="btn btn-primary" onclick="openModal()">+ Yeni Ürün</button></div>
+            <div class="card">
+                <table>
+                    <thead><tr><th>SKU</th><th>Ürün Adı</th><th>Açıklama</th><th>Fiyat</th><th>Stok</th><th>Kritik Seviye</th><th>İşlem</th></tr></thead>
+                    <tbody id="products-table-body2"><tr><td colspan="7"><div class="empty-state"><div>📦</div>Yükleniyor...</div></td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Stok Hareketleri -->
+        <div id="page-movements" style="display:none">
+            <div class="topbar"><h1>Stok Hareketleri</h1></div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">Son 20 Hareket</span></div>
+                <table>
+                    <thead><tr><th>SKU</th><th>Ürün</th><th>Tür</th><th>Miktar</th><th>Açıklama</th><th>Tarih</th></tr></thead>
+                    <tbody id="movements-body"><tr><td colspan="6"><div class="empty-state"><div>📋</div>Yükleniyor...</div></td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Kritik Stok -->
+        <div id="page-lowstock" style="display:none">
+            <div class="topbar"><h1>Kritik Stok Uyarıları</h1></div>
+            <div class="card">
+                <table>
+                    <thead><tr><th>SKU</th><th>Ürün Adı</th><th>Mevcut Stok</th><th>Kritik Seviye</th><th>Fark</th></tr></thead>
+                    <tbody id="lowstock-body"><tr><td colspan="5"><div class="empty-state"><div>✅</div>Yükleniyor...</div></td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Raporlar -->
+        <div id="page-reports" style="display:none">
+            <div class="topbar"><h1>Raporlar</h1><button class="btn btn-secondary" onclick="renderReports()">🔄 Yenile</button></div>
+            <div class="metrics-4">
+                <div class="metric-card"><div class="metric-label">Toplam Stok Değeri</div><div class="metric-val blue" id="report-total-value">—</div></div>
+                <div class="metric-card"><div class="metric-label">Toplam Ürün Çeşidi</div><div class="metric-val green" id="report-total-products">—</div></div>
+                <div class="metric-card"><div class="metric-label">Kritik Stok</div><div class="metric-val red" id="report-critical">—</div></div>
+                <div class="metric-card"><div class="metric-label">Toplam Stok Adedi</div><div class="metric-val purple" id="report-total-qty">—</div></div>
+            </div>
+            <div class="report-grid">
+                <div class="card">
+                    <div class="card-header"><span class="card-title">En Az Stoklu Ürünler</span></div>
+                    <table>
+                        <thead><tr><th>Ürün</th><th>Stok</th><th>Kritik Seviye</th></tr></thead>
+                        <tbody id="report-lowest-body"></tbody>
+                    </table>
+                </div>
+                <div class="card">
+                    <div class="card-header"><span class="card-title">En Değerli Stoklar</span></div>
+                    <table>
+                        <thead><tr><th>Ürün</th><th>Birim Fiyat</th><th>Stok Değeri</th></tr></thead>
+                        <tbody id="report-valuable-body"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">Son Stok Hareketleri Özeti</span></div>
+                <table>
+                    <thead><tr><th>SKU</th><th>Ürün</th><th>Toplam Giriş</th><th>Toplam Çıkış</th><th>Net Değişim</th></tr></thead>
+                    <tbody id="report-movements-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Ürün Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title" id="modal-title">Yeni Ürün Ekle</span>
+                <button class="close-btn" onclick="closeModal()">✕</button>
+            </div>
+            <div class="form-grid">
+                <input type="hidden" id="edit-id">
+                <div class="form-group"><label>SKU Kodu</label><input type="text" id="input-sku" placeholder="PRD-001"></div>
+                <div class="form-group"><label>Ürün Adı</label><input type="text" id="input-name" placeholder="Klavye"></div>
+                <div class="form-group"><label>Birim Fiyat (₺)</label><input type="number" id="input-price" placeholder="0.00" step="0.01"></div>
+                <div class="form-group"><label>Stok Miktarı</label><input type="number" id="input-stock" placeholder="0"></div>
+                <div class="form-group"><label>Kritik Stok Seviyesi</label><input type="number" id="input-reorder" placeholder="10"></div>
+                <div class="form-group">
+                    <label>Durum</label>
+                    <select id="input-active"><option value="true">Aktif</option><option value="false">Pasif</option></select>
+                </div>
+                <div class="form-group full"><label>Açıklama</label><textarea id="input-desc" rows="2" placeholder="Ürün açıklaması..." style="resize:vertical"></textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">İptal</button>
+                <button class="btn btn-primary" onclick="saveProduct()">💾 Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stok Hareketi Modal -->
+    <div class="modal-overlay" id="movement-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Stok Hareketi Ekle</span>
+                <button class="close-btn" onclick="closeMovementModal()">✕</button>
+            </div>
+            <div class="form-grid">
+                <input type="hidden" id="movement-product-id">
+                <div class="form-group full"><label>Ürün</label><input type="text" id="movement-product-name" readonly style="background:#f5f5f5"></div>
+                <div class="form-group">
+                    <label>Hareket Türü</label>
+                    <select id="movement-type">
+                        <option value="IN">📥 Giriş</option>
+                        <option value="OUT">📤 Çıkış</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Miktar</label><input type="number" id="movement-quantity" placeholder="0" min="1"></div>
+                <div class="form-group full"><label>Açıklama</label><input type="text" id="movement-reason" placeholder="Örn: Tedarikçiden geldi, Satış çıkışı..."></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeMovementModal()">İptal</button>
+                <button class="btn btn-primary" onclick="saveMovement()">💾 Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+const API = 'https://localhost:7029/api';
+const ZITADEL_DOMAIN = 'https://stockbridge-8rhlij.eu1.zitadel.cloud';
+const CLIENT_ID = '373940220195845278';
+const REDIRECT_URI = 'https://localhost:7029/index.html';
+
+let allProducts = [];
+let editingId = null;
+
+function generateCodeVerifier() {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return btoa(String.fromCharCode(...array)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
+async function generateCodeChallenge(verifier) {
+  const data = new TextEncoder().encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+
+async function login() {
+  const verifier = generateCodeVerifier();
+  const challenge = await generateCodeChallenge(verifier);
+  const state = generateCodeVerifier();
+  sessionStorage.setItem('pkce_verifier', verifier);
+  sessionStorage.setItem('oauth_state', state);
+  const params = new URLSearchParams({ client_id: CLIENT_ID, redirect_uri: REDIRECT_URI, response_type: 'code', scope: 'openid profile email', code_challenge: challenge, code_challenge_method: 'S256', state });
+  window.location.href = `${ZITADEL_DOMAIN}/oauth/v2/authorize?${params}`;
+}
+
+function getToken() { return sessionStorage.getItem('token'); }
+
+function logout() {
+  sessionStorage.clear();
+  window.location.href = `${ZITADEL_DOMAIN}/oidc/v1/end_session?client_id=${CLIENT_ID}&post_logout_redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
+}
+
+async function apiFetch(url, options = {}) {
+  return fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}`, ...(options.headers || {}) } });
+}
+
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  if (code) {
+    const state = params.get('state');
+    if (state !== sessionStorage.getItem('oauth_state')) { sessionStorage.clear(); login(); return; }
+    const verifier = sessionStorage.getItem('pkce_verifier');
+    try {
+      const res = await fetch(`${API}/AuthCallback/token`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, codeVerifier: verifier }) });
+      const data = await res.json();
+      if (data.access_token) {
+        sessionStorage.setItem('token', data.access_token);
+        if (data.id_token) {
+          try { const p = JSON.parse(atob(data.id_token.split('.')[1])); sessionStorage.setItem('user_name', p.name || p.preferred_username || p.email || 'Kullanici'); } catch(e) {}
+        }
+        window.history.replaceState({}, '', REDIRECT_URI);
+      } else { sessionStorage.clear(); login(); return; }
+    } catch(e) { sessionStorage.clear(); login(); return; }
+  }
+  if (!getToken()) { login(); return; }
+  document.getElementById('user-name').textContent = sessionStorage.getItem('user_name') || 'Kullanici';
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('sidebar').style.display = 'flex';
+  document.getElementById('main-content').style.display = 'block';
+  fetchProducts();
+}
+
+async function fetchProducts() {
+  try {
+    const res = await apiFetch(`${API}/Products`);
+    if (res.status === 401) { showToast('Oturum suresi doldu', 'error'); return; }
+    allProducts = await res.json();
+    renderDashboard();
+    renderProducts();
+  } catch(e) { showToast('API baglanti hatasi', 'error'); }
+}
+
+function renderDashboard() {
+  document.getElementById('metric-total').textContent = allProducts.length;
+  const low = allProducts.filter(p => p.stockQuantity <= p.reorderLevel);
+  document.getElementById('metric-low').textContent = low.length;
+  const synced = allProducts.filter(p => p.lastSyncedAt).length;
+  document.getElementById('metric-sync').textContent = synced + '/' + allProducts.length;
+  renderProductRows('products-table-body', allProducts, true);
+}
+
+function renderProductRows(tbodyId, products, withMovementBtn) {
+  const tbody = document.getElementById(tbodyId);
+  if (!products.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div>📦</div>Henüz ürün yok</div></td></tr>'; return; }
+  tbody.innerHTML = products.map(p => `
+    <tr>
+      <td><code style="font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:4px">${p.sku}</code></td>
+      <td><strong>${p.name}</strong></td>
+      <td>&#8378;${p.unitPrice.toFixed(2)}</td>
+      <td style="font-weight:600;color:${p.stockQuantity<=p.reorderLevel?'#dc2626':'#111'}">${p.stockQuantity}</td>
+      <td><span class="badge ${p.stockQuantity<=p.reorderLevel?'badge-low':'badge-ok'}">${p.stockQuantity<=p.reorderLevel?'Kritik':'Normal'}</span></td>
+      <td><span class="badge ${p.lastSyncedAt?'badge-synced':'badge-pending'}">${p.lastSyncedAt?'Sync':'Bekliyor'}</span></td>
+      <td><div class="action-btns">
+        ${withMovementBtn ? `<button class="icon-btn" onclick="openMovementModal(${p.id},'${p.name}')" title="Stok Hareketi">📦</button>` : ''}
+        <button class="icon-btn" onclick="openEdit(${p.id})" title="Duzenle">✏️</button>
+        <button class="icon-btn danger" onclick="deleteProduct(${p.id})" title="Sil">🗑️</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+function renderProducts() {
+  const tbody = document.getElementById('products-table-body2');
+  tbody.innerHTML = allProducts.map(p => `
+    <tr>
+      <td><code style="font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:4px">${p.sku}</code></td>
+      <td>${p.name}</td>
+      <td style="color:#888;font-size:13px">${p.description||'—'}</td>
+      <td>&#8378;${p.unitPrice.toFixed(2)}</td>
+      <td>${p.stockQuantity}</td>
+      <td>${p.reorderLevel}</td>
+      <td><div class="action-btns">
+        <button class="icon-btn" onclick="openMovementModal(${p.id},'${p.name}')">📦</button>
+        <button class="icon-btn" onclick="openEdit(${p.id})">✏️</button>
+        <button class="icon-btn danger" onclick="deleteProduct(${p.id})">🗑️</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+async function renderLowStock() {
+  try {
+    const res = await apiFetch(`${API}/Products/low-stock`);
+    const data = await res.json();
+    const tbody = document.getElementById('lowstock-body');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div>✅</div>Kritik stok yok!</div></td></tr>'; return; }
+    tbody.innerHTML = data.map(p => `
+      <tr>
+        <td><code style="font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:4px">${p.sku}</code></td>
+        <td>${p.name}</td>
+        <td style="color:#dc2626;font-weight:700">${p.stockQuantity}</td>
+        <td>${p.reorderLevel}</td>
+        <td style="color:#dc2626;font-weight:600">-${p.reorderLevel-p.stockQuantity}</td>
+      </tr>`).join('');
+  } catch(e) {}
+}
+
+async function renderMovements() {
+  try {
+    const res = await apiFetch(`${API}/StockMovements/recent`);
+    const data = await res.json();
+    const tbody = document.getElementById('movements-body');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div>📋</div>Henüz hareket yok</div></td></tr>'; return; }
+    tbody.innerHTML = data.map(m => `
+      <tr>
+        <td><code style="font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:4px">${m.productSku}</code></td>
+        <td>${m.productName}</td>
+        <td><span class="badge ${m.type==='IN'?'badge-in':'badge-out'}">${m.type==='IN'?'📥 Giriş':'📤 Çıkış'}</span></td>
+        <td style="font-weight:600">${m.quantity}</td>
+        <td style="color:#888;font-size:13px">${m.reason||'—'}</td>
+        <td style="color:#888;font-size:13px">${new Date(m.createdAt).toLocaleString('tr-TR')}</td>
+      </tr>`).join('');
+  } catch(e) {}
+}
+
+async function renderReports() {
+  // Özet metrikler
+  const totalValue = allProducts.reduce((s, p) => s + p.unitPrice * p.stockQuantity, 0);
+  const totalQty = allProducts.reduce((s, p) => s + p.stockQuantity, 0);
+  const critical = allProducts.filter(p => p.stockQuantity <= p.reorderLevel).length;
+  document.getElementById('report-total-value').textContent = '₺' + totalValue.toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('report-total-products').textContent = allProducts.length;
+  document.getElementById('report-critical').textContent = critical;
+  document.getElementById('report-total-qty').textContent = totalQty;
+
+  // En az stoklu 5 ürün
+  const lowest = [...allProducts].sort((a,b) => a.stockQuantity - b.stockQuantity).slice(0,5);
+  document.getElementById('report-lowest-body').innerHTML = lowest.map(p => `
+    <tr>
+      <td>${p.name}</td>
+      <td style="font-weight:600;color:${p.stockQuantity<=p.reorderLevel?'#dc2626':'#111'}">${p.stockQuantity}</td>
+      <td>${p.reorderLevel}</td>
+    </tr>`).join('');
+
+  // En değerli stoklar
+  const valuable = [...allProducts].sort((a,b) => (b.unitPrice*b.stockQuantity) - (a.unitPrice*a.stockQuantity)).slice(0,5);
+  document.getElementById('report-valuable-body').innerHTML = valuable.map(p => `
+    <tr>
+      <td>${p.name}</td>
+      <td>&#8378;${p.unitPrice.toFixed(2)}</td>
+      <td style="font-weight:600;color:#2563eb">&#8378;${(p.unitPrice*p.stockQuantity).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+    </tr>`).join('');
+
+  // Stok hareketleri özeti
+  try {
+    const res = await apiFetch(`${API}/StockMovements/recent`);
+    const movements = await res.json();
+    const summary = {};
+    movements.forEach(m => {
+      if (!summary[m.productSku]) summary[m.productSku] = { name: m.productName, sku: m.productSku, in: 0, out: 0 };
+      if (m.type === 'IN') summary[m.productSku].in += m.quantity;
+      else summary[m.productSku].out += m.quantity;
+    });
+    const rows = Object.values(summary);
+    document.getElementById('report-movements-body').innerHTML = rows.length ? rows.map(r => `
+      <tr>
+        <td><code style="font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:4px">${r.sku}</code></td>
+        <td>${r.name}</td>
+        <td style="color:#16a34a;font-weight:600">+${r.in}</td>
+        <td style="color:#dc2626;font-weight:600">-${r.out}</td>
+        <td style="font-weight:600;color:${r.in-r.out>=0?'#16a34a':'#dc2626'}">${r.in-r.out>=0?'+':''}${r.in-r.out}</td>
+      </tr>`).join('') : '<tr><td colspan="5"><div class="empty-state"><div>📋</div>Hareket verisi yok</div></td></tr>';
+  } catch(e) {}
+}
+
+function showPage(page) {
+  ['dashboard','products','movements','lowstock','reports'].forEach(p => {
+    document.getElementById('page-'+p).style.display = p===page?'block':'none';
+  });
+  document.querySelectorAll('.nav-item:not(.logout)').forEach((el,i) => {
+    el.classList.toggle('active', ['dashboard','products','movements','lowstock','reports'][i]===page);
+  });
+  if (page==='lowstock') renderLowStock();
+  if (page==='movements') renderMovements();
+  if (page==='reports') renderReports();
+}
+
+function filterProducts() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const status = document.getElementById('filter-status').value;
+  const filtered = allProducts.filter(p => {
+    const matchSearch = p.name.toLowerCase().includes(search) || p.sku.toLowerCase().includes(search);
+    const matchStatus = status==='all' ? true : status==='low' ? p.stockQuantity<=p.reorderLevel : status==='synced' ? p.lastSyncedAt!==null : p.lastSyncedAt===null;
+    return matchSearch && matchStatus;
+  });
+  renderProductRows('products-table-body', filtered, true);
+}
+
+function openModal() {
+  editingId = null;
+  document.getElementById('modal-title').textContent = 'Yeni Ürün Ekle';
+  document.getElementById('edit-id').value = '';
+  ['sku','name','price','stock','reorder','desc'].forEach(f => document.getElementById('input-'+f).value='');
+  document.getElementById('input-active').value = 'true';
+  document.getElementById('modal').classList.add('open');
+}
+
+function openEdit(id) {
+  const p = allProducts.find(x => x.id===id);
+  if (!p) return;
+  editingId = id;
+  document.getElementById('modal-title').textContent = 'Ürünü Düzenle';
+  document.getElementById('edit-id').value = id;
+  document.getElementById('input-sku').value = p.sku;
+  document.getElementById('input-name').value = p.name;
+  document.getElementById('input-price').value = p.unitPrice;
+  document.getElementById('input-stock').value = p.stockQuantity;
+  document.getElementById('input-reorder').value = p.reorderLevel;
+  document.getElementById('input-desc').value = p.description||'';
+  document.getElementById('input-active').value = p.isActive.toString();
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+async function saveProduct() {
+  const body = { sku: document.getElementById('input-sku').value, name: document.getElementById('input-name').value, description: document.getElementById('input-desc').value, unitPrice: parseFloat(document.getElementById('input-price').value)||0, stockQuantity: parseInt(document.getElementById('input-stock').value)||0, reorderLevel: parseInt(document.getElementById('input-reorder').value)||0, isActive: document.getElementById('input-active').value==='true' };
+  try {
+    if (editingId) { body.id = editingId; await apiFetch(`${API}/Products/${editingId}`, {method:'PUT',body:JSON.stringify(body)}); showToast('Ürün güncellendi ✓', 'success'); }
+    else { await apiFetch(`${API}/Products`, {method:'POST',body:JSON.stringify(body)}); showToast('Ürün eklendi ✓', 'success'); }
+    closeModal(); fetchProducts();
+  } catch(e) { showToast('Bir hata olustu', 'error'); }
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Bu ürünü silmek istediğine emin misin?')) return;
+  await apiFetch(`${API}/Products/${id}`, {method:'DELETE'});
+  showToast('Ürün silindi', 'success');
+  fetchProducts();
+}
+
+async function syncAll() {
+  showToast('ERP senkronizasyonu başladı...', '');
+  try {
+    const res = await apiFetch(`${API}/Sync/all`, {method:'POST'});
+    const data = await res.json();
+    showToast(`Sync tamamlandı: ${data.successCount} başarılı`, 'success');
+    fetchProducts();
+  } catch(e) { showToast('Sync hatası', 'error'); }
+}
+
+function openMovementModal(productId, productName) {
+  document.getElementById('movement-product-id').value = productId;
+  document.getElementById('movement-product-name').value = productName;
+  document.getElementById('movement-quantity').value = '';
+  document.getElementById('movement-reason').value = '';
+  document.getElementById('movement-type').value = 'IN';
+  document.getElementById('movement-modal').classList.add('open');
+}
+
+function closeMovementModal() { document.getElementById('movement-modal').classList.remove('open'); }
+
+async function saveMovement() {
+  const body = { productId: parseInt(document.getElementById('movement-product-id').value), quantity: parseInt(document.getElementById('movement-quantity').value)||0, type: document.getElementById('movement-type').value, reason: document.getElementById('movement-reason').value };
+  if (body.quantity <= 0) { showToast('Miktar 0dan büyük olmali', 'error'); return; }
+  try {
+    const res = await apiFetch(`${API}/StockMovements`, {method:'POST', body:JSON.stringify(body)});
+    const data = await res.json();
+    if (res.ok) { showToast(data.message, 'success'); closeMovementModal(); fetchProducts(); }
+    else { showToast(data.message || 'Hata olustu', 'error'); }
+  } catch(e) { showToast('Baglanti hatası', 'error'); }
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.className='toast', 3000);
+}
+
+init();
+    </script>
+</body>
+</html>
