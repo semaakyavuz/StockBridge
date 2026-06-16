@@ -3,13 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StockBridge.API.Data;
 using StockBridge.API.Models;
-using Microsoft.AspNetCore.Authorization;
 
 namespace StockBridge.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize] // tüm endpointler login gerektirir
     public class ProductsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -19,7 +18,7 @@ namespace StockBridge.API.Controllers
             _context = context;
         }
 
-        // Tüm ürünleri getir
+        // Tüm ürünleri getir — user ve admin görebilir
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -29,7 +28,7 @@ namespace StockBridge.API.Controllers
             return Ok(products);
         }
 
-        // Tek ürün getir
+        // Tek ürün getir — user ve admin görebilir
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -38,8 +37,9 @@ namespace StockBridge.API.Controllers
             return Ok(product);
         }
 
-        // Yeni ürün ekle
+        // Yeni ürün ekle — SADECE admin
         [HttpPost]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Create(Product product)
         {
             _context.Products.Add(product);
@@ -47,8 +47,9 @@ namespace StockBridge.API.Controllers
             return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
         }
 
-        // Ürün güncelle
+        // Ürün güncelle — SADECE admin
         [HttpPut("{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Update(int id, Product product)
         {
             if (id != product.Id) return BadRequest();
@@ -57,8 +58,9 @@ namespace StockBridge.API.Controllers
             return NoContent();
         }
 
-        // Ürün sil (soft delete)
+        // Ürün sil (soft delete) — SADECE admin
         [HttpDelete("{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Delete(int id)
         {
             var product = await _context.Products.FindAsync(id);
@@ -68,7 +70,7 @@ namespace StockBridge.API.Controllers
             return NoContent();
         }
 
-        // Kritik stok seviyesindeki ürünler
+        // Kritik stok — user ve admin görebilir
         [HttpGet("low-stock")]
         public async Task<IActionResult> GetLowStock()
         {

@@ -15,44 +15,80 @@ namespace StockBridge.API.Controllers
         private readonly IErpService _erpService;
         private readonly ILogger<SyncController> _logger;
 
-        public SyncController(AppDbContext context, IErpService erpService, ILogger<SyncController> logger)
+        public SyncController(
+            AppDbContext context,
+            IErpService erpService,
+            ILogger<SyncController> logger)
         {
             _context = context;
             _erpService = erpService;
             _logger = logger;
         }
 
+
         // Tek ürünü ERP ile senkronize et
+        // Login olan kullanıcılar erişebilir
         [HttpPost("product/{id}")]
         public async Task<IActionResult> SyncProduct(int id)
         {
             var product = await _context.Products.FindAsync(id);
-            if (product == null) return NotFound();
+
+            if (product == null)
+                return NotFound();
+
 
             var success = await _erpService.SyncProductAsync(
-                product.Id, product.Sku, product.Name, product.StockQuantity);
+                product.Id,
+                product.Sku,
+                product.Name,
+                product.StockQuantity);
+
 
             if (success)
             {
                 product.LastSyncedAt = DateTime.UtcNow;
+
                 await _context.SaveChangesAsync();
-                return Ok(new { message = $"{product.Name} başarıyla ERP ile senkronize edildi.", syncedAt = product.LastSyncedAt });
+
+                return Ok(new
+                {
+                    message = $"{product.Name} başarıyla ERP ile senkronize edildi.",
+                    syncedAt = product.LastSyncedAt
+                });
             }
 
-            return StatusCode(503, new { message = "ERP servisi şu an yanıt vermiyor, tekrar deneyin." });
+
+            return StatusCode(503, new
+            {
+                message = "ERP servisi şu an yanıt vermiyor, tekrar deneyin."
+            });
         }
 
+
+
         // Tüm ürünleri ERP ile senkronize et
+        // SADECE admin erişebilir
         [HttpPost("all")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> SyncAll()
         {
-            var products = await _context.Products.Where(p => p.IsActive).ToListAsync();
-            int success = 0, failed = 0;
+            var products = await _context.Products
+                .Where(p => p.IsActive)
+                .ToListAsync();
+
+
+            int success = 0;
+            int failed = 0;
+
 
             foreach (var product in products)
             {
                 var result = await _erpService.SyncProductAsync(
-                    product.Id, product.Sku, product.Name, product.StockQuantity);
+                    product.Id,
+                    product.Sku,
+                    product.Name,
+                    product.StockQuantity);
+
 
                 if (result)
                 {
@@ -65,7 +101,9 @@ namespace StockBridge.API.Controllers
                 }
             }
 
+
             await _context.SaveChangesAsync();
+
 
             return Ok(new
             {
@@ -76,11 +114,15 @@ namespace StockBridge.API.Controllers
             });
         }
 
+
+
         // Ürünün ERP durumunu sorgula
+        // Login olan kullanıcılar erişebilir
         [HttpGet("status/{sku}")]
         public async Task<IActionResult> GetStatus(string sku)
         {
             var status = await _erpService.GetSyncStatusAsync(sku);
+
             return Ok(status);
         }
     }

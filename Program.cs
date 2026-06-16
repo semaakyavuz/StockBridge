@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using StockBridge.API.Auth;
 using StockBridge.API.Data;
 using StockBridge.API.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +29,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddSingleton<IErpService, MockIfsErpService>();
 builder.Services.AddHttpClient();
 
+// JWT auth satýrýndan ÖNCE
+builder.Services.AddScoped<IClaimsTransformation, ZitadelRoleTransformer>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -39,6 +43,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudiences = new[] { "373940220195845278", "373939994760364801" },
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
+            RoleClaimType = "urn:zitadel:iam:org:project:roles"
         };
         options.Events = new JwtBearerEvents
         {
