@@ -595,8 +595,8 @@
             <div class="card">
                 <div class="card-header"><span class="card-title">Ürün Listesi</span></div>
                 <table>
-                    <thead><tr><th>SKU</th><th>Ürün Adı</th><th>Fiyat</th><th>Stok</th><th>Durum</th><th>ERP</th><th>İşlem</th></tr></thead>
-                    <tbody id="products-table-body"><tr><td colspan="7"><div class="empty-state"><div>📦</div>Yükleniyor...</div></td></tr></tbody>
+                    <thead><tr><th>SKU</th><th>Ürün Adı</th><th>Fiyat</th><th>Stok</th><th>Durum</th><th>ERP</th><th>Tükenme Tahmini</th><th>İşlem</th></tr></thead>
+                    <tbody id="products-table-body"><tr><td colspan="8"><div class="empty-state"><div>📦</div>Yükleniyor...</div></td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -683,7 +683,11 @@
                     <label>Durum</label>
                     <select id="input-active"><option value="true">Aktif</option><option value="false">Pasif</option></select>
                 </div>
-                <div class="form-group full"><label>Açıklama</label><textarea id="input-desc" rows="2" placeholder="Ürün açıklaması..." style="resize:vertical"></textarea></div>
+                <div class="form-group full">
+                    <label>Açıklama</label>
+                    <textarea id="input-desc" rows="2" placeholder="Ürün açıklaması..." style="resize:vertical"></textarea>
+                    <button type="button" class="btn btn-secondary" id="ai-desc-btn" onclick="generateAIDescription()" style="margin-top:6px;align-self:flex-start">✨ AI ile Açıklama Üret</button>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeModal()">İptal</button>
@@ -727,6 +731,7 @@
         let allProducts = [];
         let editingId = null;
         let isAdmin = false;
+        let stockForecast = {};
 
         function generateCodeVerifier() {
             const array = new Uint8Array(32);
@@ -845,16 +850,57 @@
                 const res = await apiFetch(`${API}/Products`);
                 if (res.status === 401) { showToast('Oturum suresi doldu', 'error'); return; }
                 allProducts = await res.json();
+                await fetchStockForecast();
                 renderDashboard();
                 renderProducts();
             } catch (e) { showToast('API baglanti hatasi', 'error'); }
+        }
+
+        async function fetchStockForecast() {
+            try {
+                const res = await apiFetch(`${API}/AI/stock-forecast`);
+                if (!res.ok) { stockForecast = {}; return; }
+                const data = await res.json();
+                stockForecast = {};
+                data.forEach(item => { stockForecast[item.productId] = item.daysLeft; });
+            } catch (e) { stockForecast = {}; }
+        }
+
+        async function generateAIDescription() {
+            const sku = document.getElementById('input-sku').value.trim();
+            const name = document.getElementById('input-name').value.trim();
+            if (!sku || !name) { showToast('Önce SKU ve ürün adını girin', 'error'); return; }
+
+            const btn = document.getElementById('ai-desc-btn');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '⏳ Üretiliyor...';
+
+            try {
+                const res = await apiFetch(`${API}/AI/generate-description`, {
+                    method: 'POST',
+                    body: JSON.stringify({ sku, name })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('input-desc').value = data.description;
+                    showToast('Açıklama üretildi ✓', 'success');
+                } else {
+                    showToast(data.message || 'Açıklama üretilemedi', 'error');
+                }
+            } catch (e) {
+                showToast('Bağlantı hatası', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
         }
 
         function renderProductRows(tbodyId, products) {
             const admin = sessionStorage.getItem('isAdmin') === 'true';
             const tbody = document.getElementById(tbodyId);
             if (!products.length) {
-                tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div>📦</div>Henüz ürün yok</div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div>📦</div>Henüz ürün yok</div></td></tr>';
                 return;
             }
             tbody.innerHTML = products.map(p => `
@@ -865,6 +911,7 @@
           <td style="font-weight:600;color:${p.stockQuantity <= p.reorderLevel ? '#dc2626' : '#111'}">${p.stockQuantity}</td>
           <td><span class="badge ${p.stockQuantity <= p.reorderLevel ? 'badge-low' : 'badge-ok'}">${p.stockQuantity <= p.reorderLevel ? 'Kritik' : 'Normal'}</span></td>
           <td><span class="badge ${p.lastSyncedAt ? 'badge-synced' : 'badge-pending'}">${p.lastSyncedAt ? 'Sync' : 'Bekliyor'}</span></td>
+          <td style="font-size:13px;color:${stockForecast[p.id] != null && stockForecast[p.id] <= 7 ? '#dc2626' : '#666'}">${stockForecast[p.id] != null ? '~' + stockForecast[p.id] + ' gün' : '—'}</td>
           <td><div class="action-btns">
             ${admin ? `<button class="icon-btn" onclick="openMovementModal(${p.id},'${p.name}')" title="Stok Hareketi">📦</button>` : ''}
             ${admin ? `<button class="icon-btn" onclick="openEdit(${p.id})" title="Düzenle">✏️</button>` : ''}
@@ -1034,16 +1081,24 @@
                 isActive: document.getElementById('input-active').value === 'true'
             };
             try {
+                let res;
                 if (editingId) {
                     body.id = editingId;
-                    await apiFetch(`${API}/Products/${editingId}`, { method: 'PUT', body: JSON.stringify(body) });
-                    showToast('Ürün güncellendi ✓', 'success');
+                    res = await apiFetch(`${API}/Products/${editingId}`, { method: 'PUT', body: JSON.stringify(body) });
                 } else {
-                    await apiFetch(`${API}/Products`, { method: 'POST', body: JSON.stringify(body) });
-                    showToast('Ürün eklendi ✓', 'success');
+                    res = await apiFetch(`${API}/Products`, { method: 'POST', body: JSON.stringify(body) });
                 }
+                if (!res.ok) {
+                    if (res.status === 403) { showToast('Bu islem için Admin yetkisi gerekir', 'error'); return; }
+                    if (res.status === 401) { showToast('Oturum suresi doldu', 'error'); return; }
+                    let msg = 'Kaydetme basarisiz (HTTP ' + res.status + ')';
+                    try { const err = await res.json(); msg = err.message || err.title || msg; } catch (e) { }
+                    showToast(msg, 'error');
+                    return;
+                }
+                showToast(editingId ? 'Ürün güncellendi ✓' : 'Ürün eklendi ✓', 'success');
                 closeModal(); fetchProducts();
-            } catch (e) { showToast('Bir hata olustu', 'error'); }
+            } catch (e) { showToast('Baglanti hatasi', 'error'); }
         }
 
         async function deleteProduct(id) {

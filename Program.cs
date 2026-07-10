@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using StockBridge.API.Auth;
 using StockBridge.API.Data;
 using StockBridge.API.Services;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,8 +29,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddSingleton<IErpService, MockIfsErpService>();
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient<IGroqService, GroqService>();
 
-// JWT auth satýrýndan ÖNCE
+// JWT auth satï¿½rï¿½ndan ï¿½NCE
 builder.Services.AddScoped<IClaimsTransformation, ZitadelRoleTransformer>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -43,7 +45,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudiences = new[] { "373940220195845278", "373939994760364801" },
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            RoleClaimType = "urn:zitadel:iam:org:project:roles"
+            // ZitadelRoleTransformer, ham "urn:zitadel:..." rol claim'ini ClaimTypes.Role
+            // olarak yeniden ekliyor; [Authorize(Roles = "...")] bu claim tipini bekler.
+            RoleClaimType = ClaimTypes.Role
         };
         options.Events = new JwtBearerEvents
         {

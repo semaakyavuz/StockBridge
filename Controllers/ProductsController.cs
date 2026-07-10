@@ -53,7 +53,18 @@ namespace StockBridge.API.Controllers
         public async Task<IActionResult> Update(int id, Product product)
         {
             if (id != product.Id) return BadRequest();
-            _context.Entry(product).State = EntityState.Modified;
+
+            var existing = await _context.Products.FindAsync(id);
+            if (existing == null) return NotFound();
+
+            existing.Sku = product.Sku;
+            existing.Name = product.Name;
+            existing.Description = product.Description;
+            existing.UnitPrice = product.UnitPrice;
+            existing.StockQuantity = product.StockQuantity;
+            existing.ReorderLevel = product.ReorderLevel;
+            existing.IsActive = product.IsActive;
+
             await _context.SaveChangesAsync();
             return NoContent();
         }
