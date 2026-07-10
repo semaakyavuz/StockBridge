@@ -1,0 +1,15 @@
+bin/
+obj/
+.vs/
+.git/
+.gitignore
+*.user
+*.suo
+appsettings.Development.json
+Dockerfile
+docker-compose.yml
+.dockerignore
+README.md
+NewFolder/
+NewFolder1/
+NewFolder2/

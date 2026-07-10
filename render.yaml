@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: stockbridge-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /index.html
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: DATABASE_URL
+        sync: false
+      - key: Groq__ApiKey
+        sync: false

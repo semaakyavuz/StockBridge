@@ -17,7 +17,7 @@ namespace StockBridge.API.Data
             modelBuilder.Entity<Product>(entity =>
             {
                 entity.Property(p => p.CreatedAt)
-                      .HasDefaultValueSql("GETUTCDATE()");
+                      .HasDefaultValueSql("(now() at time zone 'utc')");
 
                 entity.Property(p => p.UnitPrice)
                       .HasPrecision(18, 2);
@@ -26,7 +26,7 @@ namespace StockBridge.API.Data
             modelBuilder.Entity<StockMovement>(entity =>
             {
                 entity.Property(s => s.CreatedAt)
-                      .HasDefaultValueSql("GETUTCDATE()");
+                      .HasDefaultValueSql("(now() at time zone 'utc')");
             });
         }
     }

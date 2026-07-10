@@ -1,9 +1,19 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
     <title>StockBridge</title>
+    <script>
+        (function () {
+            var saved = localStorage.getItem('theme');
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+            var collapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+            if (collapsed) document.documentElement.setAttribute('data-sidebar', 'collapsed');
+        })();
+    </script>
     <style>
         * {
             box-sizing: border-box;
@@ -11,17 +21,125 @@
             padding: 0;
         }
 
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #f0f2f5;
-            color: #1a1a2e;
-            display: flex;
-            min-height: 100vh;
+        :root {
+            --bg-page: #f4f5f9;
+            --bg-card: #ffffff;
+            --text-primary: #16172b;
+            --text-secondary: #666a76;
+            --text-muted: #90939e;
+            --border-color: #e9eaee;
+            --th-bg: #fafafc;
+            --row-hover: #f6f7fb;
+            --row-zebra: #fbfbfd;
+            --input-bg: #ffffff;
+            --input-border: #e0e1e8;
+            --shadow-sm: 0 1px 2px rgba(20, 21, 40, 0.04);
+            --shadow-md: 0 8px 24px rgba(20, 21, 40, 0.08);
+            --skeleton-base: #edeef3;
+            --skeleton-shine: #f8f9fb;
+            --modal-bg: #ffffff;
+            --modal-overlay: rgba(15, 16, 30, 0.45);
+            --accent: #1D9E75;
+            --accent-hover: #178a60;
+            --accent-soft: rgba(29, 158, 117, 0.12);
+            --scrollbar-thumb: #d6d8e0;
         }
 
+        :root[data-theme="dark"] {
+            --bg-page: #0c0d14;
+            --bg-card: #15161f;
+            --text-primary: #eceef4;
+            --text-secondary: #a3a6b5;
+            --text-muted: #6f7280;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --th-bg: #1a1b26;
+            --row-hover: rgba(255, 255, 255, 0.035);
+            --row-zebra: rgba(255, 255, 255, 0.018);
+            --input-bg: #1a1b26;
+            --input-border: rgba(255, 255, 255, 0.12);
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 12px 28px rgba(0, 0, 0, 0.45);
+            --skeleton-base: #1c1d29;
+            --skeleton-shine: #262838;
+            --modal-bg: #191a25;
+            --modal-overlay: rgba(0, 0, 0, 0.65);
+            --accent: #22c58f;
+            --accent-hover: #1aa877;
+            --accent-soft: rgba(34, 197, 143, 0.15);
+            --scrollbar-thumb: #2c2e3d;
+        }
+
+        html, body {
+            scrollbar-color: var(--scrollbar-thumb) transparent;
+        }
+
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+            background: var(--bg-page);
+            color: var(--text-primary);
+            display: flex;
+            min-height: 100vh;
+            letter-spacing: 0.1px;
+        }
+
+        .sidebar, .main, .card, th, td, input, textarea, select, .modal, .metric-card {
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        /* ===== Floating controls ===== */
+        .floating-controls {
+            position: fixed;
+            top: 1rem;
+            right: 1.25rem;
+            z-index: 250;
+            display: flex;
+            gap: 8px;
+        }
+
+        .theme-toggle-btn, .mobile-menu-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            box-shadow: var(--shadow-md);
+            transition: transform 0.15s ease, background 0.2s ease;
+        }
+
+            .theme-toggle-btn:hover, .mobile-menu-btn:hover {
+                transform: scale(1.07);
+            }
+
+        .mobile-menu-btn {
+            position: fixed;
+            top: 1rem;
+            left: 1.25rem;
+            z-index: 250;
+            display: none;
+        }
+
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 190;
+        }
+
+        /* ===== Sidebar ===== */
         .sidebar {
-            width: 220px;
-            background: #1a1a2e;
+            width: 226px;
+            background: #12131c;
             display: flex;
             flex-direction: column;
             padding: 1.5rem 1rem;
@@ -30,92 +148,102 @@
             top: 0;
             left: 0;
             height: 100vh;
+            z-index: 200;
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
         }
+
+        html[data-sidebar="collapsed"] .sidebar { width: 76px; padding: 1.5rem 0.6rem; }
+        html[data-sidebar="collapsed"] .sidebar .nav-label,
+        html[data-sidebar="collapsed"] .sidebar .logo-text,
+        html[data-sidebar="collapsed"] .sidebar .user-info-text { display: none; }
+        html[data-sidebar="collapsed"] .sidebar .nav-item { justify-content: center; }
+        html[data-sidebar="collapsed"] .sidebar .user-info { display: flex; justify-content: center; }
+        html[data-sidebar="collapsed"] .main { margin-left: 76px; }
+        html[data-sidebar="collapsed"] .sidebar-collapse-btn { transform: translateX(-50%) rotate(180deg); }
+
+        .sidebar-collapse-btn {
+            position: absolute;
+            top: 28px;
+            right: -12px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: #1c1d29;
+            color: rgba(255, 255, 255, 0.75);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            transition: transform 0.2s ease, background 0.15s ease;
+        }
+
+            .sidebar-collapse-btn:hover { background: #262838; }
+
+        .sidebar-top { position: relative; }
 
         .logo {
             font-size: 18px;
-            font-weight: 600;
+            font-weight: 700;
             color: #fff;
             margin-bottom: 1.5rem;
             padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            white-space: nowrap;
+            overflow: hidden;
         }
 
-            .logo span {
-                color: #5DCAA5;
-            }
+            .logo span { color: #5DCAA5; }
 
         .nav-item {
             display: flex;
             align-items: center;
             gap: 10px;
             padding: 10px 12px;
-            border-radius: 8px;
-            color: rgba(255,255,255,0.55);
+            border-radius: 9px;
+            color: rgba(255, 255, 255, 0.55);
             cursor: pointer;
             font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
             transition: all 0.15s;
         }
 
-            .nav-item:hover {
-                background: rgba(255,255,255,0.07);
-                color: #fff;
-            }
+            .nav-item:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
+            .nav-item.active { background: var(--accent-soft); color: #5DCAA5; }
+            .nav-item.logout { margin-top: auto; color: rgba(255, 100, 100, 0.7); }
+            .nav-item.logout:hover { background: rgba(255, 100, 100, 0.1); color: #ff6b6b; }
 
-            .nav-item.active {
-                background: rgba(93,202,165,0.15);
-                color: #5DCAA5;
-            }
-
-            .nav-item.logout {
-                margin-top: auto;
-                color: rgba(255,100,100,0.7);
-            }
-
-                .nav-item.logout:hover {
-                    background: rgba(255,100,100,0.1);
-                    color: #ff6b6b;
-                }
-
-        .nav-icon {
-            font-size: 18px;
-            width: 20px;
-            text-align: center;
-        }
+        .nav-icon { font-size: 18px; width: 20px; text-align: center; flex-shrink: 0; }
 
         .user-info {
-            background: rgba(255,255,255,0.05);
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
             padding: 10px 12px;
             margin-bottom: 8px;
+            overflow: hidden;
         }
 
         .user-info-name {
             color: #fff;
             font-size: 13px;
-            font-weight: 500;
+            font-weight: 600;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        .user-info-role {
-            font-size: 11px;
-            margin-top: 2px;
-        }
+        .user-info-role { font-size: 11px; margin-top: 2px; }
+        .role-admin { color: #5DCAA5; }
+        .role-user { color: rgba(255, 255, 255, 0.4); }
 
-        .role-admin {
-            color: #5DCAA5;
-        }
-
-        .role-user {
-            color: rgba(255,255,255,0.4);
-        }
-
+        /* ===== Main ===== */
         .main {
-            margin-left: 220px;
+            margin-left: 226px;
             flex: 1;
-            padding: 2rem;
+            padding: 2rem 2.25rem 3rem;
+            min-width: 0;
         }
 
         .topbar {
@@ -123,101 +251,72 @@
             align-items: center;
             justify-content: space-between;
             margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
-            .topbar h1 {
-                font-size: 20px;
-                font-weight: 600;
-            }
+            .topbar h1 { font-size: 21px; font-weight: 700; letter-spacing: -0.3px; }
 
         .btn {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             padding: 9px 18px;
-            border-radius: 8px;
+            border-radius: 9px;
             border: none;
             cursor: pointer;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             transition: all 0.15s;
         }
 
-        .btn-primary {
-            background: #1D9E75;
-            color: #fff;
-        }
+            .btn:active { transform: scale(0.97); }
 
-            .btn-primary:hover {
-                background: #178a60;
-            }
+        .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 4px 12px rgba(29, 158, 117, 0.25); }
+        .btn-primary:hover { background: var(--accent-hover); }
 
-        .btn-secondary {
-            background: #fff;
-            color: #1a1a2e;
-            border: 1px solid #e0e0e0;
-        }
+        .btn-secondary { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); }
+        .btn-secondary:hover { background: var(--row-hover); }
 
-            .btn-secondary:hover {
-                background: #f5f5f5;
-            }
-
-        .metrics {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .metrics-4 {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
+        .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        .metrics-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
 
         .metric-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 1.25rem;
-            border: 1px solid #e8e8e8;
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 1.25rem 1.4rem;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
         }
+
+            .metric-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
 
         .metric-label {
-            font-size: 12px;
-            color: #888;
-            margin-bottom: 6px;
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
+            font-weight: 600;
         }
 
-        .metric-val {
-            font-size: 28px;
-            font-weight: 700;
-        }
-
-            .metric-val.red {
-                color: #dc2626;
-            }
-
-            .metric-val.green {
-                color: #16a34a;
-            }
-
-            .metric-val.blue {
-                color: #2563eb;
-            }
-
-            .metric-val.purple {
-                color: #7c3aed;
-            }
+        .metric-val { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; min-height: 34px; }
+        .metric-val.red { color: #dc2626; }
+        .metric-val.green { color: #16a34a; }
+        .metric-val.blue { color: #2563eb; }
+        .metric-val.purple { color: #7c3aed; }
+        [data-theme="dark"] .metric-val.red { color: #f87171; }
+        [data-theme="dark"] .metric-val.green { color: #34d399; }
+        [data-theme="dark"] .metric-val.blue { color: #60a5fa; }
+        [data-theme="dark"] .metric-val.purple { color: #a78bfa; }
 
         .card {
-            background: #fff;
-            border-radius: 12px;
-            border: 1px solid #e8e8e8;
+            background: var(--bg-card);
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
             overflow: hidden;
             margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
         }
 
         .card-header {
@@ -225,266 +324,235 @@
             align-items: center;
             justify-content: space-between;
             padding: 1rem 1.25rem;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .card-title {
-            font-size: 15px;
-            font-weight: 600;
-        }
+        .card-title { font-size: 15px; font-weight: 700; }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
+        .chart-wrap { position: relative; height: 260px; padding: 1.25rem; }
+
+        .table-responsive { overflow-x: auto; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 640px; }
 
         th {
             text-align: left;
             padding: 10px 16px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #888;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.04em;
-            background: #fafafa;
-            border-bottom: 1px solid #f0f0f0;
+            letter-spacing: 0.05em;
+            background: var(--th-bg);
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
         }
 
-        td {
-            padding: 12px 16px;
-            border-bottom: 1px solid #f7f7f7;
-            vertical-align: middle;
-        }
+        td { padding: 12px 16px; border-bottom: 1px solid var(--border-color); vertical-align: middle; color: var(--text-primary); }
+        tr:last-child td { border-bottom: none; }
+        tbody tr:nth-child(even) td { background: var(--row-zebra); }
+        tbody tr { transition: background-color 0.12s ease; }
+        tbody tr:hover td { background: var(--row-hover); }
 
-        tr:last-child td {
-            border-bottom: none;
-        }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+        .badge-ok { background: #dcfce7; color: #15803d; }
+        .badge-low { background: #fee2e2; color: #b91c1c; }
+        .badge-synced { background: #d1fae5; color: #065f46; }
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .badge-in { background: #dbeafe; color: #1d4ed8; }
+        .badge-out { background: #fee2e2; color: #b91c1c; }
+        .badge-admin { background: rgba(93, 202, 165, 0.2); color: #5DCAA5; }
+        .badge-user { background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.6); }
 
-        tr:hover td {
-            background: #fafafa;
-        }
+        [data-theme="dark"] .badge-ok { background: rgba(34, 197, 94, 0.16); color: #4ade80; }
+        [data-theme="dark"] .badge-low { background: rgba(239, 68, 68, 0.18); color: #f87171; }
+        [data-theme="dark"] .badge-synced { background: rgba(16, 185, 129, 0.18); color: #34d399; }
+        [data-theme="dark"] .badge-pending { background: rgba(245, 158, 11, 0.18); color: #fbbf24; }
+        [data-theme="dark"] .badge-in { background: rgba(59, 130, 246, 0.18); color: #60a5fa; }
+        [data-theme="dark"] .badge-out { background: rgba(239, 68, 68, 0.18); color: #f87171; }
 
-        .badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-        }
+        .stock-bar { width: 74px; height: 5px; border-radius: 3px; background: var(--border-color); margin-top: 6px; overflow: hidden; }
+        .stock-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
 
-        .badge-ok {
-            background: #dcfce7;
-            color: #15803d;
-        }
+        .forecast-pill { font-size: 12px; padding: 3px 9px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
+        .forecast-pill.warn { background: #fee2e2; color: #b91c1c; }
+        .forecast-pill.ok { background: var(--th-bg); color: var(--text-secondary); border: 1px solid var(--border-color); }
+        [data-theme="dark"] .forecast-pill.warn { background: rgba(239, 68, 68, 0.18); color: #f87171; }
 
-        .badge-low {
-            background: #fee2e2;
-            color: #b91c1c;
-        }
-
-        .badge-synced {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .badge-pending {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .badge-in {
-            background: #dbeafe;
-            color: #1d4ed8;
-        }
-
-        .badge-out {
-            background: #fee2e2;
-            color: #b91c1c;
-        }
-
-        .badge-admin {
-            background: rgba(93,202,165,0.2);
-            color: #5DCAA5;
-        }
-
-        .badge-user {
-            background: rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.6);
-        }
-
-        .action-btns {
-            display: flex;
-            gap: 6px;
-        }
+        .action-btns { display: flex; gap: 6px; }
 
         .icon-btn {
             width: 32px;
             height: 32px;
-            border-radius: 6px;
-            border: 1px solid #e8e8e8;
-            background: #fff;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            color: #666;
+            color: var(--text-secondary);
             font-size: 15px;
             transition: all 0.15s;
         }
 
-            .icon-btn:hover {
-                background: #f5f5f5;
-                border-color: #ccc;
-            }
+            .icon-btn:hover { background: var(--row-hover); border-color: var(--text-muted); transform: translateY(-1px); }
+            .icon-btn.danger:hover { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
 
-            .icon-btn.danger:hover {
-                background: #fee2e2;
-                border-color: #fca5a5;
-                color: #b91c1c;
-            }
-
+        /* ===== Modal ===== */
         .modal-overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.4);
-            z-index: 100;
+            background: var(--modal-overlay);
+            z-index: 300;
             align-items: center;
             justify-content: center;
+            backdrop-filter: blur(2px);
         }
 
-            .modal-overlay.open {
-                display: flex;
-            }
+            .modal-overlay.open { display: flex; animation: fadeIn 0.15s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .modal {
-            background: #fff;
-            border-radius: 16px;
+            background: var(--modal-bg);
+            border-radius: 18px;
             padding: 2rem;
             width: 480px;
-            max-width: 95vw;
+            max-width: 92vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-md);
+            animation: modalPop 0.18s ease;
         }
 
-        .modal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.5rem;
-        }
+        @keyframes modalPop { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-        .modal-title {
-            font-size: 17px;
-            font-weight: 700;
-        }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+        .modal-title { font-size: 17px; font-weight: 700; }
 
         .close-btn {
-            background: #f5f5f5;
+            background: var(--th-bg);
             border: none;
             border-radius: 50%;
             width: 32px;
             height: 32px;
             cursor: pointer;
             font-size: 18px;
-            color: #666;
+            color: var(--text-secondary);
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-            .close-btn:hover {
-                background: #eee;
-            }
+            .close-btn:hover { background: var(--row-hover); }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group.full { grid-column: 1 / -1; }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-            .form-group.full {
-                grid-column: 1 / -1;
-            }
-
-        label {
-            font-size: 13px;
-            font-weight: 500;
-            color: #555;
-        }
+        label { font-size: 12.5px; font-weight: 600; color: var(--text-secondary); }
 
         input, textarea, select {
             padding: 10px 12px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
+            border: 1px solid var(--input-border);
+            border-radius: 9px;
             font-size: 14px;
             outline: none;
-            transition: border 0.15s;
             font-family: inherit;
-            background: #fff;
+            background: var(--input-bg);
+            color: var(--text-primary);
         }
 
             input:focus, textarea:focus, select:focus {
-                border-color: #1D9E75;
-                box-shadow: 0 0 0 3px rgba(29,158,117,0.1);
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px var(--accent-soft);
             }
 
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 1.5rem;
-        }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 1.5rem; }
 
-        .toast {
+        /* ===== Toast ===== */
+        .toast-container {
             position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: #1a1a2e;
-            color: #fff;
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-size: 14px;
+            bottom: 1.5rem;
+            right: 1.5rem;
             z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 340px;
+        }
+
+        .toast-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #16172a;
+            color: #fff;
+            padding: 13px 34px 13px 16px;
+            border-radius: 12px;
+            font-size: 13.5px;
+            font-weight: 500;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
             opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.3s;
-            pointer-events: none;
+            transform: translateX(30px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            cursor: pointer;
         }
 
-            .toast.show {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            .toast-item.show { opacity: 1; transform: translateX(0); }
+            .toast-item.hide { opacity: 0; transform: translateX(30px) scale(0.96); }
+            .toast-item.success { background: #0d5f42; }
+            .toast-item.error { background: #6b1414; }
 
-            .toast.success {
-                background: #065f46;
-            }
-
-            .toast.error {
-                background: #7f1d1d;
-            }
-
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: #aaa;
+        .toast-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
         }
 
-            .empty-state div {
-                font-size: 40px;
-                margin-bottom: 0.5rem;
-            }
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.4);
+            width: 100%;
+        }
+
+            .toast-item.show .toast-progress { animation: toastShrink 3s linear forwards; }
+
+        @keyframes toastShrink { from { width: 100%; } to { width: 0%; } }
+
+        /* ===== Skeleton ===== */
+        .skeleton {
+            background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shine) 37%, var(--skeleton-base) 63%);
+            background-size: 400% 100%;
+            animation: skeletonLoading 1.4s ease infinite;
+            border-radius: 6px;
+        }
+
+        @keyframes skeletonLoading { 0% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .skeleton-text { height: 13px; width: 70%; }
+        .skeleton-metric { display: inline-block; width: 72px; height: 26px; vertical-align: middle; }
+
+        .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
+        .empty-state div { font-size: 40px; margin-bottom: 0.5rem; }
 
         #loading-screen {
             position: fixed;
             inset: 0;
-            background: #1a1a2e;
+            background: #12131c;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -492,53 +560,66 @@
             z-index: 9999;
         }
 
-        .loading-logo {
-            font-size: 32px;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 12px;
-        }
-
-            .loading-logo span {
-                color: #5DCAA5;
-            }
-
-        .loading-sub {
-            color: rgba(255,255,255,0.4);
-            font-size: 14px;
-        }
+        .loading-logo { font-size: 32px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+        .loading-logo span { color: #5DCAA5; }
+        .loading-sub { color: rgba(255, 255, 255, 0.4); font-size: 14px; }
 
         .spinner {
             width: 36px;
             height: 36px;
-            border: 3px solid rgba(255,255,255,0.1);
+            border: 3px solid rgba(255, 255, 255, 0.1);
             border-top-color: #5DCAA5;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             margin-bottom: 16px;
         }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .report-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
+        .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 
         .readonly-notice {
             background: #fef3c7;
             border: 1px solid #fde68a;
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 10px 14px;
             font-size: 13px;
             color: #92400e;
             margin-bottom: 1rem;
             display: none;
+        }
+
+        [data-theme="dark"] .readonly-notice { background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.3); color: #fbbf24; }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 900px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.25s ease;
+                width: 240px;
+            }
+
+            html[data-sidebar="collapsed"] .sidebar { width: 240px; padding: 1.5rem 1rem; }
+            html[data-sidebar="collapsed"] .sidebar .nav-label,
+            html[data-sidebar="collapsed"] .sidebar .logo-text,
+            html[data-sidebar="collapsed"] .sidebar .user-info-text { display: block; }
+            html[data-sidebar="collapsed"] .sidebar .nav-item { justify-content: flex-start; }
+            html[data-sidebar="collapsed"] .main { margin-left: 0; }
+            .sidebar-collapse-btn { display: none; }
+
+            .sidebar.mobile-open { transform: translateX(0); box-shadow: var(--shadow-md); }
+            .sidebar-backdrop.show { display: block; }
+            .mobile-menu-btn { display: flex; }
+            .main { margin-left: 0 !important; padding: 4.5rem 1.1rem 2.5rem; }
+            .metrics, .metrics-4 { grid-template-columns: 1fr 1fr; }
+            .report-grid { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+            .floating-controls { top: 1rem; right: 1rem; }
+        }
+
+        @media (max-width: 520px) {
+            .metrics, .metrics-4 { grid-template-columns: 1fr; }
+            .topbar { align-items: flex-start; }
         }
     </style>
 </head>
@@ -550,18 +631,29 @@
         <div class="loading-sub">Kimlik dogrulanıyor...</div>
     </div>
 
+    <div class="floating-controls">
+        <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Tema degistir">🌙</button>
+    </div>
+    <button class="mobile-menu-btn" onclick="openMobileSidebar()" title="Menu">☰</button>
+    <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
+
     <div class="sidebar" id="sidebar" style="display:none">
-        <div class="logo">Stock<span>Bridge</span></div>
-        <div class="user-info">
-            <div class="user-info-name" id="user-name">—</div>
-            <div class="user-info-role" id="user-role-badge">—</div>
+        <div class="sidebar-top">
+            <div class="logo"><span class="logo-text">Stock<span>Bridge</span></span></div>
+            <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Daralt/Genislet">‹</button>
         </div>
-        <div class="nav-item active" onclick="showPage('dashboard')"><span class="nav-icon">⊞</span> Dashboard</div>
-        <div class="nav-item" onclick="showPage('products')"><span class="nav-icon">📦</span> Ürünler</div>
-        <div class="nav-item" onclick="showPage('movements')"><span class="nav-icon">📋</span> Stok Hareketleri</div>
-        <div class="nav-item" onclick="showPage('lowstock')"><span class="nav-icon">⚠️</span> Kritik Stok</div>
-        <div class="nav-item" onclick="showPage('reports')"><span class="nav-icon">📊</span> Raporlar</div>
-        <div class="nav-item logout" onclick="logout()"><span class="nav-icon">🚪</span> Çıkış Yap</div>
+        <div class="user-info">
+            <div class="user-info-text">
+                <div class="user-info-name" id="user-name">—</div>
+                <div class="user-info-role" id="user-role-badge">—</div>
+            </div>
+        </div>
+        <div class="nav-item active" onclick="showPage('dashboard')"><span class="nav-icon">⊞</span><span class="nav-label">Dashboard</span></div>
+        <div class="nav-item" onclick="showPage('products')"><span class="nav-icon">📦</span><span class="nav-label">Ürünler</span></div>
+        <div class="nav-item" onclick="showPage('movements')"><span class="nav-icon">📋</span><span class="nav-label">Stok Hareketleri</span></div>
+        <div class="nav-item" onclick="showPage('lowstock')"><span class="nav-icon">⚠️</span><span class="nav-label">Kritik Stok</span></div>
+        <div class="nav-item" onclick="showPage('reports')"><span class="nav-icon">📊</span><span class="nav-label">Raporlar</span></div>
+        <div class="nav-item logout" onclick="logout()"><span class="nav-icon">🚪</span><span class="nav-label">Çıkış Yap</span></div>
     </div>
 
     <div class="main" id="main-content" style="display:none">
@@ -579,13 +671,17 @@
                 👁️ Salt okunur mod — Sadece görüntüleme yetkiniz var. Düzenleme için Admin yetkisi gerekir.
             </div>
             <div class="metrics">
-                <div class="metric-card"><div class="metric-label">Toplam Ürün</div><div class="metric-val blue" id="metric-total">—</div></div>
-                <div class="metric-card"><div class="metric-label">Kritik Stok</div><div class="metric-val red" id="metric-low">—</div></div>
-                <div class="metric-card"><div class="metric-label">ERP Sync</div><div class="metric-val green" id="metric-sync">—</div></div>
+                <div class="metric-card"><div class="metric-label">Toplam Ürün</div><div class="metric-val blue skeleton skeleton-metric" id="metric-total"></div></div>
+                <div class="metric-card"><div class="metric-label">Kritik Stok</div><div class="metric-val red skeleton skeleton-metric" id="metric-low"></div></div>
+                <div class="metric-card"><div class="metric-label">ERP Sync</div><div class="metric-val green skeleton skeleton-metric" id="metric-sync"></div></div>
             </div>
-            <div style="margin-bottom:1rem;display:flex;gap:10px">
-                <input type="text" id="search-input" placeholder="🔍 SKU veya ürün adı ara..." oninput="filterProducts()" style="flex:1;padding:10px 14px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none">
-                <select id="filter-status" onchange="filterProducts()" style="padding:10px 14px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;background:#fff;outline:none">
+            <div class="card">
+                <div class="card-header"><span class="card-title">Stok Hareketi Grafiği (Son Hareketler)</span></div>
+                <div class="chart-wrap"><canvas id="movements-chart"></canvas></div>
+            </div>
+            <div style="margin-bottom:1rem;display:flex;gap:10px;flex-wrap:wrap">
+                <input type="text" id="search-input" placeholder="🔍 SKU veya ürün adı ara..." oninput="filterProducts()" style="flex:1;min-width:200px;padding:10px 14px;border:1px solid var(--input-border);border-radius:9px;font-size:14px;outline:none;background:var(--input-bg);color:var(--text-primary)">
+                <select id="filter-status" onchange="filterProducts()" style="padding:10px 14px;border:1px solid var(--input-border);border-radius:9px;font-size:14px;background:var(--input-bg);color:var(--text-primary);outline:none">
                     <option value="all">Tümü</option>
                     <option value="low">Kritik Stok</option>
                     <option value="synced">ERP Sync</option>
@@ -594,10 +690,16 @@
             </div>
             <div class="card">
                 <div class="card-header"><span class="card-title">Ürün Listesi</span></div>
-                <table>
-                    <thead><tr><th>SKU</th><th>Ürün Adı</th><th>Fiyat</th><th>Stok</th><th>Durum</th><th>ERP</th><th>Tükenme Tahmini</th><th>İşlem</th></tr></thead>
-                    <tbody id="products-table-body"><tr><td colspan="8"><div class="empty-state"><div>📦</div>Yükleniyor...</div></td></tr></tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>SKU</th><th>Ürün Adı</th><th>Fiyat</th><th>Stok</th><th>Durum</th><th>ERP</th><th>Tükenme Tahmini</th><th>İşlem</th></tr></thead>
+                        <tbody id="products-table-body">
+                            <tr><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td></tr>
+                            <tr><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td></tr>
+                            <tr><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -608,10 +710,15 @@
                 <button class="btn btn-primary" id="new-product-btn" onclick="openModal()">+ Yeni Ürün</button>
             </div>
             <div class="card">
-                <table>
-                    <thead><tr><th>SKU</th><th>Ürün Adı</th><th>Açıklama</th><th>Fiyat</th><th>Stok</th><th>Kritik Seviye</th><th>İşlem</th></tr></thead>
-                    <tbody id="products-table-body2"></tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>SKU</th><th>Ürün Adı</th><th>Açıklama</th><th>Fiyat</th><th>Stok</th><th>Kritik Seviye</th><th>İşlem</th></tr></thead>
+                        <tbody id="products-table-body2">
+                            <tr><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td></tr>
+                            <tr><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td><td><div class="skeleton skeleton-text"></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -620,10 +727,12 @@
             <div class="topbar"><h1>Stok Hareketleri</h1></div>
             <div class="card">
                 <div class="card-header"><span class="card-title">Son 20 Hareket</span></div>
-                <table>
-                    <thead><tr><th>SKU</th><th>Ürün</th><th>Tür</th><th>Miktar</th><th>Açıklama</th><th>Tarih</th></tr></thead>
-                    <tbody id="movements-body"><tr><td colspan="6"><div class="empty-state"><div>📋</div>Yükleniyor...</div></td></tr></tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>SKU</th><th>Ürün</th><th>Tür</th><th>Miktar</th><th>Açıklama</th><th>Tarih</th></tr></thead>
+                        <tbody id="movements-body"><tr><td colspan="6"><div class="empty-state"><div>📋</div>Yükleniyor...</div></td></tr></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -631,10 +740,12 @@
         <div id="page-lowstock" style="display:none">
             <div class="topbar"><h1>Kritik Stok Uyarıları</h1></div>
             <div class="card">
-                <table>
-                    <thead><tr><th>SKU</th><th>Ürün Adı</th><th>Mevcut Stok</th><th>Kritik Seviye</th><th>Fark</th></tr></thead>
-                    <tbody id="lowstock-body"></tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>SKU</th><th>Ürün Adı</th><th>Mevcut Stok</th><th>Kritik Seviye</th><th>Fark</th></tr></thead>
+                        <tbody id="lowstock-body"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -650,16 +761,16 @@
             <div class="report-grid">
                 <div class="card">
                     <div class="card-header"><span class="card-title">En Az Stoklu Ürünler</span></div>
-                    <table><thead><tr><th>Ürün</th><th>Stok</th><th>Kritik Seviye</th></tr></thead><tbody id="report-lowest-body"></tbody></table>
+                    <div class="table-responsive"><table><thead><tr><th>Ürün</th><th>Stok</th><th>Kritik Seviye</th></tr></thead><tbody id="report-lowest-body"></tbody></table></div>
                 </div>
                 <div class="card">
                     <div class="card-header"><span class="card-title">En Degerli Stoklar</span></div>
-                    <table><thead><tr><th>Ürün</th><th>Birim Fiyat</th><th>Stok Degeri</th></tr></thead><tbody id="report-valuable-body"></tbody></table>
+                    <div class="table-responsive"><table><thead><tr><th>Ürün</th><th>Birim Fiyat</th><th>Stok Degeri</th></tr></thead><tbody id="report-valuable-body"></tbody></table></div>
                 </div>
             </div>
             <div class="card">
                 <div class="card-header"><span class="card-title">Stok Hareketleri Özeti</span></div>
-                <table><thead><tr><th>SKU</th><th>Ürün</th><th>Toplam Giris</th><th>Toplam Çıkıs</th><th>Net Degisim</th></tr></thead><tbody id="report-movements-body"></tbody></table>
+                <div class="table-responsive"><table><thead><tr><th>SKU</th><th>Ürün</th><th>Toplam Giris</th><th>Toplam Çıkıs</th><th>Net Degisim</th></tr></thead><tbody id="report-movements-body"></tbody></table></div>
             </div>
         </div>
 
@@ -705,7 +816,7 @@
             </div>
             <div class="form-grid">
                 <input type="hidden" id="movement-product-id">
-                <div class="form-group full"><label>Ürün</label><input type="text" id="movement-product-name" readonly style="background:#f5f5f5"></div>
+                <div class="form-group full"><label>Ürün</label><input type="text" id="movement-product-name" readonly style="background:var(--th-bg)"></div>
                 <div class="form-group">
                     <label>Hareket Türü</label>
                     <select id="movement-type"><option value="IN">📥 Giris</option><option value="OUT">📤 Çıkıs</option></select>
@@ -720,18 +831,90 @@
         </div>
     </div>
 
-    <div class="toast" id="toast"></div>
+    <div class="toast-container" id="toast-container"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script>
-        const API = 'https://localhost:7029/api';
+        const API = '/api';
         const ZITADEL_DOMAIN = 'https://stockbridge-8rhlij.eu1.zitadel.cloud';
         const CLIENT_ID = '373940220195845278';
-        const REDIRECT_URI = 'https://localhost:7029/index.html';
+        // Sabit degil: uygulama nerede host ediliyorsa (localhost, Railway...) oraya gore
+        // otomatik hesaplanir. Bu URL, Zitadel konsolunda "Redirect URIs" listesine
+        // ekli olmak zorunda.
+        const REDIRECT_URI = window.location.origin + '/index.html';
 
         let allProducts = [];
         let editingId = null;
         let isAdmin = false;
         let stockForecast = {};
+        let movementsChart = null;
+
+        /* ===== Theme ===== */
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            const btn = document.getElementById('theme-toggle-btn');
+            if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+            if (allProducts.length) renderMovementsChart();
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'light';
+            applyTheme(current === 'dark' ? 'light' : 'dark');
+        }
+
+        /* ===== Sidebar collapse / mobile ===== */
+        function toggleSidebarCollapse() {
+            const collapsed = document.documentElement.getAttribute('data-sidebar') === 'collapsed';
+            if (collapsed) { document.documentElement.removeAttribute('data-sidebar'); localStorage.setItem('sidebar_collapsed', 'false'); }
+            else { document.documentElement.setAttribute('data-sidebar', 'collapsed'); localStorage.setItem('sidebar_collapsed', 'true'); }
+        }
+
+        function openMobileSidebar() {
+            document.getElementById('sidebar').classList.add('mobile-open');
+            document.getElementById('sidebar-backdrop').classList.add('show');
+        }
+
+        function closeMobileSidebar() {
+            document.getElementById('sidebar').classList.remove('mobile-open');
+            document.getElementById('sidebar-backdrop').classList.remove('show');
+        }
+
+        /* ===== Animated counters ===== */
+        function animateCount(el, target, opts = {}) {
+            if (!el) return;
+            const { duration = 700, prefix = '', suffix = '', decimals = 0 } = opts;
+            el.classList.remove('skeleton', 'skeleton-metric');
+            const startTime = performance.now();
+            function tick(now) {
+                const progress = Math.min(1, (now - startTime) / duration);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const value = target * eased;
+                el.textContent = prefix + value.toLocaleString('tr-TR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + suffix;
+                if (progress < 1) requestAnimationFrame(tick);
+                else el.textContent = prefix + target.toLocaleString('tr-TR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + suffix;
+            }
+            requestAnimationFrame(tick);
+        }
+
+        /* ===== Skeleton helper ===== */
+        function skeletonRowsHtml(cols, rows = 5) {
+            let html = '';
+            for (let r = 0; r < rows; r++) {
+                html += '<tr>' + Array.from({ length: cols }).map(() => '<td><div class="skeleton skeleton-text"></div></td>').join('') + '</tr>';
+            }
+            return html;
+        }
+
+        /* ===== Stock fill bar ===== */
+        function stockFillInfo(p) {
+            const target = Math.max(p.reorderLevel * 3, p.stockQuantity, 10);
+            const pct = Math.max(4, Math.min(100, Math.round((p.stockQuantity / target) * 100)));
+            let color = '#16a34a';
+            if (p.stockQuantity <= p.reorderLevel) color = '#dc2626';
+            else if (p.stockQuantity <= p.reorderLevel * 1.5) color = '#f59e0b';
+            return { pct, color };
+        }
 
         function generateCodeVerifier() {
             const array = new Uint8Array(32);
@@ -817,7 +1000,7 @@
                     const res = await fetch(`${API}/AuthCallback/token`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ code, codeVerifier: verifier })
+                        body: JSON.stringify({ code, codeVerifier: verifier, redirectUri: REDIRECT_URI })
                     });
                     const data = await res.json();
                     if (data.access_token) {
@@ -896,6 +1079,60 @@
             }
         }
 
+        /* ===== Chart ===== */
+        async function renderMovementsChart() {
+            const canvas = document.getElementById('movements-chart');
+            if (!canvas || typeof Chart === 'undefined') return;
+            try {
+                const res = await apiFetch(`${API}/StockMovements/recent`);
+                if (!res.ok) return;
+                const data = await res.json();
+
+                const byDate = {};
+                data.slice().reverse().forEach(m => {
+                    const d = new Date(m.createdAt).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
+                    if (!byDate[d]) byDate[d] = { in: 0, out: 0 };
+                    if (m.type === 'IN') byDate[d].in += m.quantity; else byDate[d].out += m.quantity;
+                });
+
+                const labels = Object.keys(byDate);
+                const inData = labels.map(d => byDate[d].in);
+                const outData = labels.map(d => byDate[d].out);
+
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+                const textColor = isDark ? 'rgba(255,255,255,0.6)' : '#666';
+
+                if (movementsChart) movementsChart.destroy();
+
+                if (!labels.length) {
+                    const ctx2d = canvas.getContext('2d');
+                    ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+                    return;
+                }
+
+                movementsChart = new Chart(canvas, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [
+                            { label: 'Giriş', data: inData, backgroundColor: '#1D9E75', borderRadius: 6, maxBarThickness: 26 },
+                            { label: 'Çıkış', data: outData, backgroundColor: '#dc2626', borderRadius: 6, maxBarThickness: 26 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: textColor, usePointStyle: true } } },
+                        scales: {
+                            x: { grid: { display: false }, ticks: { color: textColor } },
+                            y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, precision: 0 } }
+                        }
+                    }
+                });
+            } catch (e) { }
+        }
+
         function renderProductRows(tbodyId, products) {
             const admin = sessionStorage.getItem('isAdmin') === 'true';
             const tbody = document.getElementById(tbodyId);
@@ -903,52 +1140,74 @@
                 tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div>📦</div>Henüz ürün yok</div></td></tr>';
                 return;
             }
-            tbody.innerHTML = products.map(p => `
+            tbody.innerHTML = products.map(p => {
+                const fill = stockFillInfo(p);
+                const days = stockForecast[p.id];
+                const forecastHtml = days != null
+                    ? `<span class="forecast-pill ${days <= 7 ? 'warn' : 'ok'}">~${days} gün</span>`
+                    : `<span class="forecast-pill ok">—</span>`;
+                return `
         <tr>
-          <td><code style="font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:4px">${p.sku}</code></td>
+          <td><code style="font-size:12px;background:var(--th-bg);padding:2px 6px;border-radius:4px">${p.sku}</code></td>
           <td><strong>${p.name}</strong></td>
           <td>&#8378;${p.unitPrice.toFixed(2)}</td>
-          <td style="font-weight:600;color:${p.stockQuantity <= p.reorderLevel ? '#dc2626' : '#111'}">${p.stockQuantity}</td>
+          <td>
+            <div style="font-weight:700;color:${p.stockQuantity <= p.reorderLevel ? '#dc2626' : 'var(--text-primary)'}">${p.stockQuantity}</div>
+            <div class="stock-bar"><div class="stock-bar-fill" style="width:${fill.pct}%;background:${fill.color}"></div></div>
+          </td>
           <td><span class="badge ${p.stockQuantity <= p.reorderLevel ? 'badge-low' : 'badge-ok'}">${p.stockQuantity <= p.reorderLevel ? 'Kritik' : 'Normal'}</span></td>
           <td><span class="badge ${p.lastSyncedAt ? 'badge-synced' : 'badge-pending'}">${p.lastSyncedAt ? 'Sync' : 'Bekliyor'}</span></td>
-          <td style="font-size:13px;color:${stockForecast[p.id] != null && stockForecast[p.id] <= 7 ? '#dc2626' : '#666'}">${stockForecast[p.id] != null ? '~' + stockForecast[p.id] + ' gün' : '—'}</td>
+          <td>${forecastHtml}</td>
           <td><div class="action-btns">
             ${admin ? `<button class="icon-btn" onclick="openMovementModal(${p.id},'${p.name}')" title="Stok Hareketi">📦</button>` : ''}
             ${admin ? `<button class="icon-btn" onclick="openEdit(${p.id})" title="Düzenle">✏️</button>` : ''}
-            ${admin ? `<button class="icon-btn danger" onclick="deleteProduct(${p.id})" title="Sil">🗑️</button>` : '<span style="color:#aaa;font-size:12px">Salt okunur</span>'}
+            ${admin ? `<button class="icon-btn danger" onclick="deleteProduct(${p.id})" title="Sil">🗑️</button>` : '<span style="color:var(--text-muted);font-size:12px">Salt okunur</span>'}
           </div></td>
-        </tr>`).join('');
+        </tr>`;
+            }).join('');
         }
 
         function renderDashboard() {
-            document.getElementById('metric-total').textContent = allProducts.length;
+            animateCount(document.getElementById('metric-total'), allProducts.length);
             const low = allProducts.filter(p => p.stockQuantity <= p.reorderLevel);
-            document.getElementById('metric-low').textContent = low.length;
+            animateCount(document.getElementById('metric-low'), low.length);
             const synced = allProducts.filter(p => p.lastSyncedAt).length;
-            document.getElementById('metric-sync').textContent = synced + '/' + allProducts.length;
+            animateCount(document.getElementById('metric-sync'), synced, { suffix: '/' + allProducts.length });
             renderProductRows('products-table-body', allProducts);
+            renderMovementsChart();
         }
 
         function renderProducts() {
             const admin = sessionStorage.getItem('isAdmin') === 'true';
             const tbody = document.getElementById('products-table-body2');
-            tbody.innerHTML = allProducts.map(p => `
+            if (!allProducts.length) {
+                tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div>📦</div>Henüz ürün yok</div></td></tr>';
+                return;
+            }
+            tbody.innerHTML = allProducts.map(p => {
+                const fill = stockFillInfo(p);
+                return `
         <tr>
-          <td><code style="font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:4px">${p.sku}</code></td>
+          <td><code style="font-size:12px;background:var(--th-bg);padding:2px 6px;border-radius:4px">${p.sku}</code></td>
           <td>${p.name}</td>
-          <td style="color:#888;font-size:13px">${p.description || '—'}</td>
+          <td style="color:var(--text-secondary);font-size:13px">${p.description || '—'}</td>
           <td>&#8378;${p.unitPrice.toFixed(2)}</td>
-          <td>${p.stockQuantity}</td>
+          <td>
+            <div>${p.stockQuantity}</div>
+            <div class="stock-bar"><div class="stock-bar-fill" style="width:${fill.pct}%;background:${fill.color}"></div></div>
+          </td>
           <td>${p.reorderLevel}</td>
           <td><div class="action-btns">
             ${admin ? `<button class="icon-btn" onclick="openMovementModal(${p.id},'${p.name}')">📦</button>` : ''}
             ${admin ? `<button class="icon-btn" onclick="openEdit(${p.id})">✏️</button>` : ''}
-            ${admin ? `<button class="icon-btn danger" onclick="deleteProduct(${p.id})">🗑️</button>` : '<span style="color:#aaa;font-size:12px">Salt okunur</span>'}
+            ${admin ? `<button class="icon-btn danger" onclick="deleteProduct(${p.id})">🗑️</button>` : '<span style="color:var(--text-muted);font-size:12px">Salt okunur</span>'}
           </div></td>
-        </tr>`).join('');
+        </tr>`;
+            }).join('');
         }
 
         async function renderLowStock() {
+            document.getElementById('lowstock-body').innerHTML = skeletonRowsHtml(5, 4);
             try {
                 const res = await apiFetch(`${API}/Products/low-stock`);
                 const data = await res.json();
@@ -956,7 +1215,7 @@
                 if (!data.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div>✅</div>Kritik stok yok!</div></td></tr>'; return; }
                 tbody.innerHTML = data.map(p => `
           <tr>
-            <td><code style="font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:4px">${p.sku}</code></td>
+            <td><code style="font-size:12px;background:var(--th-bg);padding:2px 6px;border-radius:4px">${p.sku}</code></td>
             <td>${p.name}</td>
             <td style="color:#dc2626;font-weight:700">${p.stockQuantity}</td>
             <td>${p.reorderLevel}</td>
@@ -966,6 +1225,7 @@
         }
 
         async function renderMovements() {
+            document.getElementById('movements-body').innerHTML = skeletonRowsHtml(6, 6);
             try {
                 const res = await apiFetch(`${API}/StockMovements/recent`);
                 const data = await res.json();
@@ -973,27 +1233,38 @@
                 if (!data.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div>📋</div>Henüz hareket yok</div></td></tr>'; return; }
                 tbody.innerHTML = data.map(m => `
           <tr>
-            <td><code style="font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:4px">${m.productSku}</code></td>
+            <td><code style="font-size:12px;background:var(--th-bg);padding:2px 6px;border-radius:4px">${m.productSku}</code></td>
             <td>${m.productName}</td>
             <td><span class="badge ${m.type === 'IN' ? 'badge-in' : 'badge-out'}">${m.type === 'IN' ? '📥 Giris' : '📤 Çıkıs'}</span></td>
             <td style="font-weight:600">${m.quantity}</td>
-            <td style="color:#888;font-size:13px">${m.reason || '—'}</td>
-            <td style="color:#888;font-size:13px">${new Date(m.createdAt).toLocaleString('tr-TR')}</td>
+            <td style="color:var(--text-secondary);font-size:13px">${m.reason || '—'}</td>
+            <td style="color:var(--text-secondary);font-size:13px">${new Date(m.createdAt).toLocaleString('tr-TR')}</td>
           </tr>`).join('');
             } catch (e) { }
         }
 
         async function renderReports() {
+            ['report-total-value', 'report-total-products', 'report-critical', 'report-total-qty'].forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.add('skeleton', 'skeleton-metric');
+                el.textContent = '';
+            });
+            document.getElementById('report-lowest-body').innerHTML = skeletonRowsHtml(3, 4);
+            document.getElementById('report-valuable-body').innerHTML = skeletonRowsHtml(3, 4);
+            document.getElementById('report-movements-body').innerHTML = skeletonRowsHtml(5, 4);
+
             const totalValue = allProducts.reduce((s, p) => s + p.unitPrice * p.stockQuantity, 0);
             const totalQty = allProducts.reduce((s, p) => s + p.stockQuantity, 0);
             const critical = allProducts.filter(p => p.stockQuantity <= p.reorderLevel).length;
-            document.getElementById('report-total-value').textContent = '₺' + totalValue.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            document.getElementById('report-total-products').textContent = allProducts.length;
-            document.getElementById('report-critical').textContent = critical;
-            document.getElementById('report-total-qty').textContent = totalQty;
+
+            animateCount(document.getElementById('report-total-value'), totalValue, { prefix: '₺', decimals: 2 });
+            animateCount(document.getElementById('report-total-products'), allProducts.length);
+            animateCount(document.getElementById('report-critical'), critical);
+            animateCount(document.getElementById('report-total-qty'), totalQty);
+
             const lowest = [...allProducts].sort((a, b) => a.stockQuantity - b.stockQuantity).slice(0, 5);
             document.getElementById('report-lowest-body').innerHTML = lowest.map(p => `
-        <tr><td>${p.name}</td><td style="font-weight:600;color:${p.stockQuantity <= p.reorderLevel ? '#dc2626' : '#111'}">${p.stockQuantity}</td><td>${p.reorderLevel}</td></tr>`).join('');
+        <tr><td>${p.name}</td><td style="font-weight:600;color:${p.stockQuantity <= p.reorderLevel ? '#dc2626' : 'var(--text-primary)'}">${p.stockQuantity}</td><td>${p.reorderLevel}</td></tr>`).join('');
             const valuable = [...allProducts].sort((a, b) => (b.unitPrice * b.stockQuantity) - (a.unitPrice * a.stockQuantity)).slice(0, 5);
             document.getElementById('report-valuable-body').innerHTML = valuable.map(p => `
         <tr><td>${p.name}</td><td>&#8378;${p.unitPrice.toFixed(2)}</td><td style="font-weight:600;color:#2563eb">&#8378;${(p.unitPrice * p.stockQuantity).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td></tr>`).join('');
@@ -1009,7 +1280,7 @@
                 const rows = Object.values(summary);
                 document.getElementById('report-movements-body').innerHTML = rows.length ? rows.map(r => `
           <tr>
-            <td><code style="font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:4px">${r.sku}</code></td>
+            <td><code style="font-size:12px;background:var(--th-bg);padding:2px 6px;border-radius:4px">${r.sku}</code></td>
             <td>${r.name}</td>
             <td style="color:#16a34a;font-weight:600">+${r.in}</td>
             <td style="color:#dc2626;font-weight:600">-${r.out}</td>
@@ -1028,6 +1299,7 @@
             if (page === 'lowstock') renderLowStock();
             if (page === 'movements') renderMovements();
             if (page === 'reports') renderReports();
+            closeMobileSidebar();
         }
 
         function filterProducts() {
@@ -1147,11 +1419,37 @@
             } catch (e) { showToast('Baglanti hatası', 'error'); }
         }
 
+        /* ===== Toast ===== */
+        function dismissToast(el) {
+            el.classList.remove('show');
+            el.classList.add('hide');
+            setTimeout(() => el.remove(), 250);
+        }
+
         function showToast(msg, type) {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.className = 'toast show ' + type;
-            setTimeout(() => t.className = 'toast', 3000);
+            const container = document.getElementById('toast-container');
+            const icons = { success: '✓', error: '✕' };
+            const el = document.createElement('div');
+            el.className = 'toast-item' + (type ? ' ' + type : '');
+
+            const icon = document.createElement('span');
+            icon.className = 'toast-icon';
+            icon.textContent = icons[type] || 'ℹ';
+
+            const text = document.createElement('span');
+            text.textContent = msg;
+
+            const bar = document.createElement('div');
+            bar.className = 'toast-progress';
+
+            el.appendChild(icon);
+            el.appendChild(text);
+            el.appendChild(bar);
+            container.appendChild(el);
+
+            requestAnimationFrame(() => el.classList.add('show'));
+            const timer = setTimeout(() => dismissToast(el), 3000);
+            el.addEventListener('click', () => { clearTimeout(timer); dismissToast(el); });
         }
 
         init();

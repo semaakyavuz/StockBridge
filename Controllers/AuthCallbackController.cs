@@ -20,7 +20,10 @@ namespace StockBridge.API.Controllers
         {
             var zitadelDomain = _config["Zitadel:Domain"];
             var clientId = _config["Zitadel:ClientId"];
-            var redirectUri = _config["Zitadel:RedirectUri"];
+            // Frontend, kendi window.location.origin'inden hesapladigi redirect_uri'yi gonderir
+            // (localhost'ta veya Railway'de calisirken ayni degeri kullanmasi gerekir); bos gelirse
+            // appsettings.json'daki varsayilana (yerel gelistirme icin) dus.
+            var redirectUri = !string.IsNullOrWhiteSpace(req.RedirectUri) ? req.RedirectUri : _config["Zitadel:RedirectUri"];
 
             var body = new FormUrlEncodedContent(new Dictionary<string, string>
             {
@@ -45,5 +48,6 @@ namespace StockBridge.API.Controllers
     {
         public string Code { get; set; } = string.Empty;
         public string CodeVerifier { get; set; } = string.Empty;
+        public string RedirectUri { get; set; } = string.Empty;
     }
 }
