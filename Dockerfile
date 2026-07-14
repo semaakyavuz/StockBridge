@@ -14,6 +14,10 @@ WORKDIR /app
 
 COPY --from=build /app/publish .
 
+RUN adduser --disabled-password --home /app --gecos '' appuser \
+    && chown -R appuser /app
+USER appuser
+
 ENV ASPNETCORE_ENVIRONMENT=Production
 # Railway PORT env degiskenini kendisi enjekte eder ve Program.cs bunu okuyup
 # Kestrel'i buna gore baglar; EXPOSE burada sadece dokumantasyon amaclidir.

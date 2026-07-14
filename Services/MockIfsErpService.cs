@@ -16,8 +16,7 @@
             await Task.Delay(300); // IFS'in cevap süresini taklit et
 
             // %10 ihtimalle ERP'nin geçici hata verdiğini simüle et
-            var random = new Random();
-            if (random.Next(1, 11) == 1)
+            if (System.Security.Cryptography.RandomNumberGenerator.GetInt32(1, 11) == 1)
             {
                 _logger.LogWarning("IFS ERP geçici hata verdi. SKU: {Sku}", sku);
                 return false;

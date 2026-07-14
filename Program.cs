@@ -16,7 +16,9 @@ var builder = WebApplication.CreateBuilder(args);
 var containerPort = Environment.GetEnvironmentVariable("PORT");
 if (!string.IsNullOrWhiteSpace(containerPort))
 {
-    builder.WebHost.UseUrls($"http://0.0.0.0:{containerPort}");
+    // TLS, platform (Render/Railway) tarafinda edge'de sonlandirilir; konteynere
+    // sadece duz HTTP ile dahili trafik yönlendirilir, bu yuzden burada http kullanimi kasitlidir.
+    builder.WebHost.UseUrls($"http://0.0.0.0:{containerPort}"); // NOSONAR
 }
 
 builder.Services.AddCors(options =>
