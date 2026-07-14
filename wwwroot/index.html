@@ -968,7 +968,6 @@
 
         function applyRoleUI() {
             isAdmin = parseRole();
-            sessionStorage.setItem('isAdmin', isAdmin);
 
             const roleEl = document.getElementById('user-role-badge');
             if (isAdmin) {
@@ -979,14 +978,8 @@
                 roleEl.className = 'user-info-role role-user';
             }
 
-            if (!isAdmin) {
-                const adminBtns = document.getElementById('admin-buttons');
-                if (adminBtns) adminBtns.style.display = 'none';
-                const notice = document.getElementById('readonly-notice');
-                if (notice) notice.style.display = 'block';
-                const newProductBtn = document.getElementById('new-product-btn');
-                if (newProductBtn) newProductBtn.style.display = 'none';
-            }
+            const aiBtn = document.getElementById('ai-desc-btn');
+            if (aiBtn) aiBtn.style.display = isAdmin ? '' : 'none';
         }
 
         async function init() {
@@ -1134,7 +1127,6 @@
         }
 
         function renderProductRows(tbodyId, products) {
-            const admin = sessionStorage.getItem('isAdmin') === 'true';
             const tbody = document.getElementById(tbodyId);
             if (!products.length) {
                 tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div>📦</div>Henüz ürün yok</div></td></tr>';
@@ -1159,9 +1151,9 @@
           <td><span class="badge ${p.lastSyncedAt ? 'badge-synced' : 'badge-pending'}">${p.lastSyncedAt ? 'Sync' : 'Bekliyor'}</span></td>
           <td>${forecastHtml}</td>
           <td><div class="action-btns">
-            ${admin ? `<button class="icon-btn" onclick="openMovementModal(${p.id},'${p.name}')" title="Stok Hareketi">📦</button>` : ''}
-            ${admin ? `<button class="icon-btn" onclick="openEdit(${p.id})" title="Düzenle">✏️</button>` : ''}
-            ${admin ? `<button class="icon-btn danger" onclick="deleteProduct(${p.id})" title="Sil">🗑️</button>` : '<span style="color:var(--text-muted);font-size:12px">Salt okunur</span>'}
+            <button class="icon-btn" onclick="openMovementModal(${p.id},'${p.name}')" title="Stok Hareketi">📦</button>
+            <button class="icon-btn" onclick="openEdit(${p.id})" title="Düzenle">✏️</button>
+            <button class="icon-btn danger" onclick="deleteProduct(${p.id})" title="Sil">🗑️</button>
           </div></td>
         </tr>`;
             }).join('');
@@ -1178,7 +1170,6 @@
         }
 
         function renderProducts() {
-            const admin = sessionStorage.getItem('isAdmin') === 'true';
             const tbody = document.getElementById('products-table-body2');
             if (!allProducts.length) {
                 tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div>📦</div>Henüz ürün yok</div></td></tr>';
@@ -1198,9 +1189,9 @@
           </td>
           <td>${p.reorderLevel}</td>
           <td><div class="action-btns">
-            ${admin ? `<button class="icon-btn" onclick="openMovementModal(${p.id},'${p.name}')">📦</button>` : ''}
-            ${admin ? `<button class="icon-btn" onclick="openEdit(${p.id})">✏️</button>` : ''}
-            ${admin ? `<button class="icon-btn danger" onclick="deleteProduct(${p.id})">🗑️</button>` : '<span style="color:var(--text-muted);font-size:12px">Salt okunur</span>'}
+            <button class="icon-btn" onclick="openMovementModal(${p.id},'${p.name}')">📦</button>
+            <button class="icon-btn" onclick="openEdit(${p.id})">✏️</button>
+            <button class="icon-btn danger" onclick="deleteProduct(${p.id})">🗑️</button>
           </div></td>
         </tr>`;
             }).join('');
@@ -1314,7 +1305,6 @@
         }
 
         function openModal() {
-            if (!isAdmin) { showToast('Bu islem için Admin yetkisi gerekir', 'error'); return; }
             editingId = null;
             document.getElementById('modal-title').textContent = 'Yeni Ürün Ekle';
             document.getElementById('edit-id').value = '';
@@ -1324,7 +1314,6 @@
         }
 
         function openEdit(id) {
-            if (!isAdmin) { showToast('Bu islem için Admin yetkisi gerekir', 'error'); return; }
             const p = allProducts.find(x => x.id === id);
             if (!p) return;
             editingId = id;
@@ -1374,7 +1363,6 @@
         }
 
         async function deleteProduct(id) {
-            if (!isAdmin) { showToast('Bu islem için Admin yetkisi gerekir', 'error'); return; }
             if (!confirm('Bu ürünü silmek istedigine emin misin?')) return;
             await apiFetch(`${API}/Products/${id}`, { method: 'DELETE' });
             showToast('Ürün silindi', 'success');
@@ -1382,7 +1370,6 @@
         }
 
         async function syncAll() {
-            if (!isAdmin) { showToast('Bu islem için Admin yetkisi gerekir', 'error'); return; }
             showToast('ERP senkronizasyonu basladi...', '');
             try {
                 const res = await apiFetch(`${API}/Sync/all`, { method: 'POST' });

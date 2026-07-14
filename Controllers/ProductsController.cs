@@ -37,9 +37,8 @@ namespace StockBridge.API.Controllers
             return Ok(product);
         }
 
-        // Yeni ürün ekle — SADECE admin
+        // Yeni ürün ekle — login olan tüm kullanıcılar erişebilir
         [HttpPost]
-        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Create(Product product)
         {
             _context.Products.Add(product);
@@ -47,9 +46,8 @@ namespace StockBridge.API.Controllers
             return CreatedAtAction(nameof(GetById), new { id = product.Id }, product);
         }
 
-        // Ürün güncelle — SADECE admin
+        // Ürün güncelle — login olan tüm kullanıcılar erişebilir
         [HttpPut("{id}")]
-        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Update(int id, Product product)
         {
             if (id != product.Id) return BadRequest();
@@ -69,9 +67,8 @@ namespace StockBridge.API.Controllers
             return NoContent();
         }
 
-        // Ürün sil (soft delete) — SADECE admin
+        // Ürün sil (soft delete) — login olan tüm kullanıcılar erişebilir
         [HttpDelete("{id}")]
-        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Delete(int id)
         {
             var product = await _context.Products.FindAsync(id);

@@ -67,9 +67,8 @@ namespace StockBridge.API.Controllers
 
 
         // Tüm ürünleri ERP ile senkronize et
-        // SADECE admin erişebilir
+        // Login olan kullanıcılar erişebilir
         [HttpPost("all")]
-        [Authorize(Roles = "admin")]
         public async Task<IActionResult> SyncAll()
         {
             var products = await _context.Products
