@@ -5,6 +5,10 @@
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
 ![License](https://img.shields.io/badge/license-unlicensed-lightgrey)
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=semaakyavuz_StockBridge&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=semaakyavuz_StockBridge)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=semaakyavuz_StockBridge&metric=coverage)](https://sonarcloud.io/summary/new_code?id=semaakyavuz_StockBridge)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=semaakyavuz_StockBridge&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=semaakyavuz_StockBridge)
+
 A full-stack inventory & stock management API built with **ASP.NET Core 8**, featuring OAuth2/OIDC authentication via **Zitadel**, role-based access control, an AI-assisted product catalog powered by **Groq (Llama 3.1)**, and a single-page dashboard with no frontend framework — just HTML, CSS and vanilla JavaScript.
 
 🔗 **Live demo:** https://stockbridge-enb4.onrender.com/index.html
@@ -21,7 +25,7 @@ A full-stack inventory & stock management API built with **ASP.NET Core 8**, fea
 
 **Authentication & authorization**
 - OAuth2 Authorization Code + PKCE flow against [Zitadel](https://zitadel.com) (supports Google as an identity provider)
-- Role-based access control (`admin` vs. read-only `user`) enforced both server-side (`[Authorize(Roles = "admin")]`) and in the UI
+- Role-based access control (`admin` vs. `user`, both roles can manage products/stock/sync via Zitadel-issued JWTs)
 - JWT bearer validation against the Zitadel issuer/audience
 
 **AI features (Groq API, `llama-3.1-8b-instant`, free tier)**
@@ -104,13 +108,14 @@ dotnet run
 ## Project structure
 
 ```
-Controllers/     REST API endpoints (Products, StockMovements, Sync, AI, Auth)
+Controllers/     REST API endpoints (Products, StockMovements, Sync, AI)
 Services/        GroqService, mocked ERP integration, background sync job
 Models/          EF Core entities (Product, StockMovement, User)
 Data/            AppDbContext + EF Core configuration
 Auth/            Zitadel role-claim transformation
 Migrations/      EF Core migrations (PostgreSQL)
 wwwroot/         Single-page dashboard (HTML/CSS/JS, no build step)
+StockBridge.Tests/  xUnit test suite (Moq, coverlet)
 ```
 
 ---
