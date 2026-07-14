@@ -7,7 +7,7 @@
 
 A full-stack inventory & stock management API built with **ASP.NET Core 8**, featuring OAuth2/OIDC authentication via **Zitadel**, role-based access control, an AI-assisted product catalog powered by **Groq (Llama 3.1)**, and a single-page dashboard with no frontend framework — just HTML, CSS and vanilla JavaScript.
 
-🔗 **Live demo:** _add your Render URL here after deploying_
+🔗 **Live demo:** https://stockbridge-enb4.onrender.com/index.html
 
 ---
 
