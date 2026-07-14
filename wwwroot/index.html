@@ -635,7 +635,7 @@
         <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Tema degistir">🌙</button>
     </div>
     <button class="mobile-menu-btn" onclick="openMobileSidebar()" title="Menu">☰</button>
-    <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
+    <div class="sidebar-backdrop" id="sidebar-backdrop" role="button" tabindex="0" onclick="closeMobileSidebar()" onkeydown="handleActivateKey(event, closeMobileSidebar)"></div>
 
     <div class="sidebar" id="sidebar" style="display:none">
         <div class="sidebar-top">
@@ -648,12 +648,12 @@
                 <div class="user-info-role" id="user-role-badge">—</div>
             </div>
         </div>
-        <div class="nav-item active" onclick="showPage('dashboard')"><span class="nav-icon">⊞</span><span class="nav-label">Dashboard</span></div>
-        <div class="nav-item" onclick="showPage('products')"><span class="nav-icon">📦</span><span class="nav-label">Ürünler</span></div>
-        <div class="nav-item" onclick="showPage('movements')"><span class="nav-icon">📋</span><span class="nav-label">Stok Hareketleri</span></div>
-        <div class="nav-item" onclick="showPage('lowstock')"><span class="nav-icon">⚠️</span><span class="nav-label">Kritik Stok</span></div>
-        <div class="nav-item" onclick="showPage('reports')"><span class="nav-icon">📊</span><span class="nav-label">Raporlar</span></div>
-        <div class="nav-item logout" onclick="logout()"><span class="nav-icon">🚪</span><span class="nav-label">Çıkış Yap</span></div>
+        <div class="nav-item active" role="button" tabindex="0" onclick="showPage('dashboard')" onkeydown="handleActivateKey(event, () => showPage('dashboard'))"><span class="nav-icon">⊞</span><span class="nav-label">Dashboard</span></div>
+        <div class="nav-item" role="button" tabindex="0" onclick="showPage('products')" onkeydown="handleActivateKey(event, () => showPage('products'))"><span class="nav-icon">📦</span><span class="nav-label">Ürünler</span></div>
+        <div class="nav-item" role="button" tabindex="0" onclick="showPage('movements')" onkeydown="handleActivateKey(event, () => showPage('movements'))"><span class="nav-icon">📋</span><span class="nav-label">Stok Hareketleri</span></div>
+        <div class="nav-item" role="button" tabindex="0" onclick="showPage('lowstock')" onkeydown="handleActivateKey(event, () => showPage('lowstock'))"><span class="nav-icon">⚠️</span><span class="nav-label">Kritik Stok</span></div>
+        <div class="nav-item" role="button" tabindex="0" onclick="showPage('reports')" onkeydown="handleActivateKey(event, () => showPage('reports'))"><span class="nav-icon">📊</span><span class="nav-label">Raporlar</span></div>
+        <div class="nav-item logout" role="button" tabindex="0" onclick="logout()" onkeydown="handleActivateKey(event, logout)"><span class="nav-icon">🚪</span><span class="nav-label">Çıkış Yap</span></div>
     </div>
 
     <div class="main" id="main-content" style="display:none">
@@ -680,8 +680,8 @@
                 <div class="chart-wrap"><canvas id="movements-chart"></canvas></div>
             </div>
             <div style="margin-bottom:1rem;display:flex;gap:10px;flex-wrap:wrap">
-                <input type="text" id="search-input" placeholder="🔍 SKU veya ürün adı ara..." oninput="filterProducts()" style="flex:1;min-width:200px;padding:10px 14px;border:1px solid var(--input-border);border-radius:9px;font-size:14px;outline:none;background:var(--input-bg);color:var(--text-primary)">
-                <select id="filter-status" onchange="filterProducts()" style="padding:10px 14px;border:1px solid var(--input-border);border-radius:9px;font-size:14px;background:var(--input-bg);color:var(--text-primary);outline:none">
+                <input type="text" id="search-input" aria-label="SKU veya ürün adı ara" placeholder="🔍 SKU veya ürün adı ara..." oninput="filterProducts()" style="flex:1;min-width:200px;padding:10px 14px;border:1px solid var(--input-border);border-radius:9px;font-size:14px;outline:none;background:var(--input-bg);color:var(--text-primary)">
+                <select id="filter-status" aria-label="Durum filtrele" onchange="filterProducts()" style="padding:10px 14px;border:1px solid var(--input-border);border-radius:9px;font-size:14px;background:var(--input-bg);color:var(--text-primary);outline:none">
                     <option value="all">Tümü</option>
                     <option value="low">Kritik Stok</option>
                     <option value="synced">ERP Sync</option>
@@ -785,17 +785,17 @@
             </div>
             <div class="form-grid">
                 <input type="hidden" id="edit-id">
-                <div class="form-group"><label>SKU Kodu</label><input type="text" id="input-sku" placeholder="PRD-001"></div>
-                <div class="form-group"><label>Ürün Adı</label><input type="text" id="input-name" placeholder="Klavye"></div>
-                <div class="form-group"><label>Birim Fiyat (₺)</label><input type="number" id="input-price" placeholder="0.00" step="0.01"></div>
-                <div class="form-group"><label>Stok Miktarı</label><input type="number" id="input-stock" placeholder="0"></div>
-                <div class="form-group"><label>Kritik Stok Seviyesi</label><input type="number" id="input-reorder" placeholder="10"></div>
+                <div class="form-group"><label for="input-sku">SKU Kodu</label><input type="text" id="input-sku" placeholder="PRD-001"></div>
+                <div class="form-group"><label for="input-name">Ürün Adı</label><input type="text" id="input-name" placeholder="Klavye"></div>
+                <div class="form-group"><label for="input-price">Birim Fiyat (₺)</label><input type="number" id="input-price" placeholder="0.00" step="0.01"></div>
+                <div class="form-group"><label for="input-stock">Stok Miktarı</label><input type="number" id="input-stock" placeholder="0"></div>
+                <div class="form-group"><label for="input-reorder">Kritik Stok Seviyesi</label><input type="number" id="input-reorder" placeholder="10"></div>
                 <div class="form-group">
-                    <label>Durum</label>
+                    <label for="input-active">Durum</label>
                     <select id="input-active"><option value="true">Aktif</option><option value="false">Pasif</option></select>
                 </div>
                 <div class="form-group full">
-                    <label>Açıklama</label>
+                    <label for="input-desc">Açıklama</label>
                     <textarea id="input-desc" rows="2" placeholder="Ürün açıklaması..." style="resize:vertical"></textarea>
                     <button type="button" class="btn btn-secondary" id="ai-desc-btn" onclick="generateAIDescription()" style="margin-top:6px;align-self:flex-start">✨ AI ile Açıklama Üret</button>
                 </div>
@@ -816,13 +816,13 @@
             </div>
             <div class="form-grid">
                 <input type="hidden" id="movement-product-id">
-                <div class="form-group full"><label>Ürün</label><input type="text" id="movement-product-name" readonly style="background:var(--th-bg)"></div>
+                <div class="form-group full"><label for="movement-product-name">Ürün</label><input type="text" id="movement-product-name" readonly style="background:var(--th-bg)"></div>
                 <div class="form-group">
-                    <label>Hareket Türü</label>
+                    <label for="movement-type">Hareket Türü</label>
                     <select id="movement-type"><option value="IN">📥 Giris</option><option value="OUT">📤 Çıkıs</option></select>
                 </div>
-                <div class="form-group"><label>Miktar</label><input type="number" id="movement-quantity" placeholder="0" min="1"></div>
-                <div class="form-group full"><label>Açıklama</label><input type="text" id="movement-reason" placeholder="Örn: Tedarikçiden geldi..."></div>
+                <div class="form-group"><label for="movement-quantity">Miktar</label><input type="number" id="movement-quantity" placeholder="0" min="1"></div>
+                <div class="form-group full"><label for="movement-reason">Açıklama</label><input type="text" id="movement-reason" placeholder="Örn: Tedarikçiden geldi..."></div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeMovementModal()">İptal</button>
@@ -848,6 +848,13 @@
         let isAdmin = false;
         let stockForecast = {};
         let movementsChart = null;
+
+        function handleActivateKey(event, action) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                action();
+            }
+        }
 
         /* ===== Theme ===== */
         function applyTheme(theme) {
